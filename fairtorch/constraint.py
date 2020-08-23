@@ -9,10 +9,10 @@ class ConstraintLoss(nn.Module):
         self.alpha = alpha
         self.norm = norm
         self.n_class = n_class
-        self.K = 2
+        self.constraints_dim = 2
         self.J = self.n_class + 1
-        self.M = torch.zeros((self.K, self.J))
-        self.c = torch.zeros(self.K)
+        self.M = torch.zeros((self.constraints_dim, self.J))
+        self.constraints_value = torch.zeros(self.constraints_dim)
 
     def mu_f(self, X=None, y=None, sensitive=None):
         return torch.zeros(self.K)
@@ -41,7 +41,7 @@ class DemographicParityLoss(ConstraintLoss):
         super(DemographicParityLoss, self).__init__(n_class=self.n_class, alpha=alpha, norm=norm)
         self.K = 2 * self.n_class
         self.J = self.n_class + 1
-        self.M = torch.zeros((self.K, self.J))
+        self.M = torch.zeros((self.constraints_dim, self.J))
         for i in range(self.K):
             j = i % 2
             if j == 0:
@@ -50,7 +50,7 @@ class DemographicParityLoss(ConstraintLoss):
             else:
                 self.M[i, j - 1] = -1.0
                 self.M[i, -1] = 1.0
-        self.c = torch.zeros(self.K)
+        self.constraints_value = torch.zeros(self.constraints_dim)
 
     def mu_f(self, X, out, sensitive, y=None):
         list_Es = []
