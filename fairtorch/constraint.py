@@ -27,7 +27,7 @@ class ConstraintLoss(nn.Module):
         return cons
 
 
-class DPLoss(ConstraintLoss):
+class DemographicParityLoss(ConstraintLoss):
     def __init__(self, A_classes=[0, 1], B=1, norm=2):
         """loss of demograpfhic parity
 
@@ -38,7 +38,7 @@ class DPLoss(ConstraintLoss):
         """
         self.A_classes = A_classes
         self.n_class = len(A_classes)
-        super(DPLoss, self).__init__(n_class=self.n_class, B=B, norm=norm)
+        super(DemographicParityLoss, self).__init__(n_class=self.n_class, B=B, norm=norm)
         self.K = 2 * self.n_class
         self.J = self.n_class + 1
         self.M = torch.zeros((self.K, self.J))
@@ -61,4 +61,4 @@ class DPLoss(ConstraintLoss):
         return torch.stack(list_Es)
 
     def forward(self, X, out, A):
-        return super(DPLoss, self).forward(X, out, A)
+        return super(DemographicParityLoss, self).forward(X, out, A)

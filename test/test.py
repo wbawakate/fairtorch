@@ -3,7 +3,7 @@ import unittest
 import torch
 from torch import nn
 
-from fairtorch import ConstraintLoss, DPLoss
+from fairtorch import ConstraintLoss, DemographicParityLoss
 
 
 class TestConstraint(unittest.TestCase):
@@ -14,8 +14,8 @@ class TestConstraint(unittest.TestCase):
     def test_dp(self):
         fdim = 16
         model = nn.Sequential(nn.Linear(fdim, 32), nn.ReLU(), nn.Linear(32, 1), nn.Sigmoid())
-        dp_loss = DPLoss(A_classes=[0, 1])
-        self.assertTrue(isinstance(dp_loss, DPLoss))
+        dp_loss = DemographicParityLoss(A_classes=[0, 1])
+        self.assertTrue(isinstance(dp_loss, DemographicParityLoss))
         bsize = 128
         n_A = 2
         X = torch.randn((bsize, fdim))

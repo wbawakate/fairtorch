@@ -1,3 +1,3 @@
-from .constraint import ConstraintLoss, DPLoss
+from .constraint import ConstraintLoss, DemographicParityLoss
 
-__all__ = ["ConstraintLoss", "DPLoss"]
+__all__ = ["ConstraintLoss", "DemographicParityLoss"]
