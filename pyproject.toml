@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "fairtorch"
+version = "0.1.0"
+description = ""
+authors = ["Masashi Sode <masashi.sode@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.6.5"
+torch = "^1.6.0"
+
+[tool.poetry.dev-dependencies]
+black = "^19.10b0"
+flake8 = "^3.8.2"
+isort = "^4.3.21"
+autopep8 = "^1.5.2"
+mypy = "^0.782"
+
+[build-system]
+requires = ["poetry-core>=1.0.0a5"]
+build-backend = "poetry.core.masonry.api"
