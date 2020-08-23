@@ -9,13 +9,13 @@ class ConstraintLoss(nn.Module):
         self.alpha = alpha
         self.norm = norm
         self.n_class = n_class
-        self.constraints_dim = 2
-        self.J = self.n_class + 1
-        self.M = torch.zeros((self.constraints_dim, self.J))
-        self.constraints_value = torch.zeros(self.constraints_dim)
+        self.n_constr = 2
+        self.dim_condition = self.n_class + 1
+        self.M = torch.zeros((self.n_constr, self.dim_condition))
+        self.c = torch.zeros(self.n_constr)
 
     def mu_f(self, X=None, y=None, sensitive=None):
-        return torch.zeros(self.K)
+        return torch.zeros(self.n_constr)
 
     def forward(self, X, out, sensitive, y=None):
         mu = self.mu_f(X=X, out=out, sensitive=sensitive, y=y)
@@ -36,13 +36,13 @@ class DemographicParityLoss(ConstraintLoss):
             alpha (int, optional): [description]. Defaults to 1.
             norm (int, optional): [description]. Defaults to 2.
         """
-        self.A_classes = A_classes
-        self.n_class = len(A_classes)
+        self.sensitive_classes = sensitive_classes
+        self.n_class = len(sensitive_classes)
         super(DemographicParityLoss, self).__init__(n_class=self.n_class, alpha=alpha, norm=norm)
-        self.K = 2 * self.n_class
-        self.J = self.n_class + 1
-        self.M = torch.zeros((self.constraints_dim, self.J))
-        for i in range(self.K):
+        self.n_constr = 2 * self.n_class
+        self.dim_condition = self.n_class + 1
+        self.M = torch.zeros((self.n_constr, self.dim_condition))
+        for i in range(self.n_constr):
             j = i % 2
             if j == 0:
                 self.M[i, j] = 1.0
@@ -50,11 +50,11 @@ class DemographicParityLoss(ConstraintLoss):
             else:
                 self.M[i, j - 1] = -1.0
                 self.M[i, -1] = 1.0
-        self.constraints_value = torch.zeros(self.constraints_dim)
+        self.c = torch.zeros(self.n_constr)
 
     def mu_f(self, X, out, sensitive, y=None):
         list_Es = []
-        for v in self.A_classes:
+        for v in self.sensitive_classes:
             idx_true = sensitive == v  # torch.bool
             list_Es.append(out[idx_true].mean())
         list_Es.append(out.mean())
