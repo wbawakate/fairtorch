@@ -4,9 +4,9 @@ from torch import nn
 from torch.nn import functional as F
 
 
-class ConstrLoss(nn.Module):
+class ConstraintLoss(nn.Module):
     def __init__(self, n_class=2, B=1, norm=2):
-        super(ConstrLoss, self).__init__()
+        super(ConstraintLoss, self).__init__()
         self.B = B
         self.norm = norm
         self.n_class = n_class
@@ -28,7 +28,7 @@ class ConstrLoss(nn.Module):
         return cons
 
 
-class DPLoss(ConstrLoss):
+class DPLoss(ConstraintLoss):
     def __init__(self, A_classes=[0, 1], B=1, norm=2):
         """loss of demograpfhic parity
 
@@ -52,26 +52,6 @@ class DPLoss(ConstrLoss):
                 self.M[i, j - 1] = -1.0
                 self.M[i, -1] = 1.0
         self.c = torch.zeros(self.K)
-
-    def __mu_f(self, X, out, y, A):  # 旧バージョン
-        # ここから怪しい
-        if isinstance(A, torch.Tensor):
-            uniques = torch.unique(A.detach().cpu())
-        elif isinstance(A, list):
-            uniques = torch.Tensor(list(set(A)))
-        elif isinstance(A, np.array):
-            uniques = torch.Tensor(np.unique())
-        else:
-            raise TypeError(
-                "A is expected to be a torch.Tesor, "
-                "list or numpy, but passed {}".format(type(A))
-            )
-        list_Es = []
-        for i in range(uniques.size(0)):
-            idx_true = A == uniques[i]  # torch.bool
-            list_Es.append(out[idx_true].mean())
-        list_Es.append(out.mean())
-        return torch.stack(list_Es)
 
     def mu_f(self, X, out, A, y=None):
         list_Es = []

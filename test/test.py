@@ -3,13 +3,13 @@ import unittest
 import torch
 from torch import nn
 
-from fairtorch import ConstrLoss, DPLoss
+from fairtorch import ConstraintLoss, DPLoss
 
 
 class TestConstraint(unittest.TestCase):
     def test_costraint(self):
-        consloss = ConstrLoss()
-        self.assertTrue(isinstance(consloss, ConstrLoss))
+        consloss = ConstraintLoss()
+        self.assertTrue(isinstance(consloss, ConstraintLoss))
 
     def test_dp(self):
         fdim = 16

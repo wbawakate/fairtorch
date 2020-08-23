@@ -1,3 +1,3 @@
-from .constraint import ConstrLoss, DPLoss
+from .constraint import ConstraintLoss, DPLoss
 
-__all__ = ["ConstrLoss", "DPLoss"]
+__all__ = ["ConstraintLoss", "DPLoss"]
