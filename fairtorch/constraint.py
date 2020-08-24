@@ -18,6 +18,7 @@ class ConstraintLoss(nn.Module):
         return torch.zeros(self.n_constraints)
 
     def forward(self, X, out, sensitive, y=None):
+        out = torch.sigmoid(out)
         mu = self.mu_f(X=X, out=out, sensitive=sensitive, y=y)
         gap_constraint = F.relu(torch.mv(self.M, mu) - self.c)
         if self.p_norm == 2:
@@ -55,12 +56,12 @@ class DemographicParityLoss(ConstraintLoss):
         self.c = torch.zeros(self.n_constraints)
 
     def mu_f(self, X, out, sensitive, y=None):
-        list_Es = []
+        expected_values_list = []
         for v in self.sensitive_classes:
             idx_true = sensitive == v  # torch.bool
-            list_Es.append(out[idx_true].mean())
-        list_Es.append(out.mean())
-        return torch.stack(list_Es)
+            expected_values_list.append(out[idx_true].mean())
+        expected_values_list.append(out.mean())  # star
+        return torch.stack(expected_values_list)
 
     def forward(self, X, out, sensitive):
         return super(DemographicParityLoss, self).forward(X, out, sensitive)
