@@ -107,16 +107,16 @@ class EqualiedOddsLoss(ConstraintLoss):
             return s * float(x)
 
     def mu_f(self, X, out, sensitive, y):
-        list_Es = []
+        expected_values_list = []
         for u in self.sensitive_classes:
             for v in self.y_classes:
                 idx_true = (y == v) * (sensitive == u)  # torch.bool
-                list_Es.append(out[idx_true].mean())
+                expected_values_list.append(out[idx_true].mean())
         # sensitive is star
         for v in self.y_classes:
             idx_true = y == v
-            list_Es.append(out[idx_true].mean())
-        return torch.stack(list_Es)
+            expected_values_list.append(out[idx_true].mean())
+        return torch.stack(expected_values_list)
 
     def forward(self, X, out, sensitive, y):
         return super(EqualiedOddsLoss, self).forward(X, out, sensitive, y=y)
