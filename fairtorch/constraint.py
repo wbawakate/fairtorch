@@ -56,12 +56,12 @@ class DemographicParityLoss(ConstraintLoss):
         self.c = torch.zeros(self.n_constraints)
 
     def mu_f(self, X, out, sensitive, y=None):
-        list_Es = []
+        expected_values_list = []
         for v in self.sensitive_classes:
             idx_true = sensitive == v  # torch.bool
-            list_Es.append(out[idx_true].mean())
-        list_Es.append(out.mean())  # star
-        return torch.stack(list_Es)
+            expected_values_list.append(out[idx_true].mean())
+        expected_values_list.append(out.mean())  # star
+        return torch.stack(expected_values_list)
 
     def forward(self, X, out, sensitive):
         return super(DemographicParityLoss, self).forward(X, out, sensitive)
