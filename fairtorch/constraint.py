@@ -39,7 +39,9 @@ class DemographicParityLoss(ConstraintLoss):
         """
         self.sensitive_classes = sensitive_classes
         self.n_class = len(sensitive_classes)
-        super(DemographicParityLoss, self).__init__(n_class=self.n_class, alpha=alpha, p_norm=p_norm)
+        super(DemographicParityLoss, self).__init__(
+            n_class=self.n_class, alpha=alpha, p_norm=p_norm
+        )
         self.n_constr = 2 * self.n_class
         self.dim_condition = self.n_class + 1
         self.M = torch.zeros((self.n_constr, self.dim_condition))
@@ -58,14 +60,14 @@ class DemographicParityLoss(ConstraintLoss):
         for v in self.sensitive_classes:
             idx_true = sensitive == v  # torch.bool
             list_Es.append(out[idx_true].mean())
-        list_Es.append(out.mean()) # star
+        list_Es.append(out.mean())  # star
         return torch.stack(list_Es)
 
     def forward(self, X, out, sensitive):
         return super(DemographicParityLoss, self).forward(X, out, sensitive)
 
-class EqualiedOddsLoss(ConstraintLoss):
 
+class EqualiedOddsLoss(ConstraintLoss):
     def __init__(self, sensitive_classes=[0, 1], alpha=1, p_norm=2):
         """loss of demograpfhic parity
 
@@ -76,46 +78,45 @@ class EqualiedOddsLoss(ConstraintLoss):
         """
         self.sensitive_classes = sensitive_classes
         self.y_classes = [0, 1]
-        self.n_class = len(sensitive_classes)   
+        self.n_class = len(sensitive_classes)
         self.n_y_class = len(self.y_classes)
         super(EqualiedOddsLoss, self).__init__(n_class=self.n_class, alpha=alpha, p_norm=p_norm)
         # K:  number of constraint : (|A| x |Y| x {+, -})
         self.n_constr = self.n_class * self.n_y_class * 2
         # J : dim of conditions  : ((|A|+1) x |Y|)
-        self.dim_condition = self.n_y_class * (self.n_class + 1) 
+        self.dim_condition = self.n_y_class * (self.n_class + 1)
         self.M = torch.zeros((self.n_constr, self.dim_condition))
         # make M (K * J): (|A| x |Y| x {+, -})  *   (|A|+1) x |Y|) )
         self.c = torch.zeros(self.n_constr)
-        element_K_A = self.sensitive_classes + [ None ]  
+        element_K_A = self.sensitive_classes + [None]
         for i_a, a_0 in enumerate(self.sensitive_classes):
-            for i_y , y_0 in enumerate(self.y_classes):
+            for i_y, y_0 in enumerate(self.y_classes):
                 for i_s, s in enumerate([-1, 1]):
                     for j_y, y_1 in enumerate(self.y_classes):
                         for j_a, a_1 in enumerate(element_K_A):
-                            i = i_a * (2 * self.n_y_class) + i_y *2 + i_s
+                            i = i_a * (2 * self.n_y_class) + i_y * 2 + i_s
                             j = j_y + self.n_y_class * j_a
-                            self.M[i, j] = self.__element_M(a_0, a_1, y_1, y_1, s)  
+                            self.M[i, j] = self.__element_M(a_0, a_1, y_1, y_1, s)
 
     def __element_M(self, a0, a1, y0, y1, s):
-        if a0 is None or a1 is None: 
+        if a0 is None or a1 is None:
             x = y0 == y1
             return -1 * s * x
         else:
-            x = (a0 == a1) & (y0 == y1) 
-            return  s * float(x) 
+            x = (a0 == a1) & (y0 == y1)
+            return s * float(x)
 
     def mu_f(self, X, out, sensitive, y):
         list_Es = []
         for u in self.sensitive_classes:
             for v in self.y_classes:
-                idx_true = (y == v) * (sensitive == u)    # torch.bool
+                idx_true = (y == v) * (sensitive == u)  # torch.bool
                 list_Es.append(out[idx_true].mean())
         # sensitive is star
         for v in self.y_classes:
-            idx_true = (y == v)
+            idx_true = y == v
             list_Es.append(out[idx_true].mean())
         return torch.stack(list_Es)
 
     def forward(self, X, out, sensitive, y):
         return super(EqualiedOddsLoss, self).forward(X, out, sensitive, y=y)
-        

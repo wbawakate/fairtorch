@@ -14,7 +14,7 @@ class TestConstraint(unittest.TestCase):
     def test_dp(self):
         fdim = 16
         model = nn.Sequential(nn.Linear(fdim, 32), nn.ReLU(), nn.Linear(32, 1))
-        dp_loss = DemographicParityLoss(sensitive_classes=[0,1])
+        dp_loss = DemographicParityLoss(sensitive_classes=[0, 1])
         self.assertTrue(isinstance(dp_loss, DemographicParityLoss))
         bsize = 128
         n_A = 2
@@ -31,12 +31,10 @@ class TestConstraint(unittest.TestCase):
 
         self.assertGreater(float(loss), 0)
 
-
-    
     def test_eo(self):
         fdim = 16
         model = nn.Sequential(nn.Linear(fdim, 32), nn.ReLU(), nn.Linear(32, 1))
-        eo_loss = EqualiedOddsLoss(sensitive_classes=[0,1])
+        eo_loss = EqualiedOddsLoss(sensitive_classes=[0, 1])
         self.assertTrue(isinstance(eo_loss, EqualiedOddsLoss))
         bsize = 128
         n_A = 2
@@ -45,7 +43,7 @@ class TestConstraint(unittest.TestCase):
         sensitive = torch.randint(0, n_A, (bsize,))
         out = model(X)
 
-        mu = eo_loss.mu_f(X, torch.sigmod(out), sensitive, y=y)
+        mu = eo_loss.mu_f(X, torch.sigmoid(out), sensitive, y=y)
         print(mu.size(), type(mu.size()))
         self.assertEqual(int(mu.size(0)), (n_A + 1) * 2)
 
