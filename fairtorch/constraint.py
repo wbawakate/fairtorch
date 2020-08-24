@@ -9,13 +9,13 @@ class ConstraintLoss(nn.Module):
         self.alpha = alpha
         self.p_norm = p_norm
         self.n_class = n_class
-        self.n_constr = 2
+        self.n_constraints = 2
         self.dim_condition = self.n_class + 1
-        self.M = torch.zeros((self.n_constr, self.dim_condition))
-        self.c = torch.zeros(self.n_constr)
+        self.M = torch.zeros((self.n_constraints, self.dim_condition))
+        self.c = torch.zeros(self.n_constraints)
 
     def mu_f(self, X=None, y=None, sensitive=None):
-        return torch.zeros(self.n_constr)
+        return torch.zeros(self.n_constraints)
 
     def forward(self, X, out, sensitive, y=None):
         mu = self.mu_f(X=X, out=out, sensitive=sensitive, y=y)
@@ -38,11 +38,13 @@ class DemographicParityLoss(ConstraintLoss):
         """
         self.sensitive_classes = sensitive_classes
         self.n_class = len(sensitive_classes)
-        super(DemographicParityLoss, self).__init__(n_class=self.n_class, alpha=alpha, p_norm=p_norm)
-        self.n_constr = 2 * self.n_class
+        super(DemographicParityLoss, self).__init__(
+            n_class=self.n_class, alpha=alpha, p_norm=p_norm
+        )
+        self.n_constraints = 2 * self.n_class
         self.dim_condition = self.n_class + 1
-        self.M = torch.zeros((self.n_constr, self.dim_condition))
-        for i in range(self.n_constr):
+        self.M = torch.zeros((self.n_constraints, self.dim_condition))
+        for i in range(self.n_constraints):
             j = i % 2
             if j == 0:
                 self.M[i, j] = 1.0
@@ -50,7 +52,7 @@ class DemographicParityLoss(ConstraintLoss):
             else:
                 self.M[i, j - 1] = -1.0
                 self.M[i, -1] = 1.0
-        self.c = torch.zeros(self.n_constr)
+        self.c = torch.zeros(self.n_constraints)
 
     def mu_f(self, X, out, sensitive, y=None):
         list_Es = []
@@ -62,5 +64,3 @@ class DemographicParityLoss(ConstraintLoss):
 
     def forward(self, X, out, sensitive):
         return super(DemographicParityLoss, self).forward(X, out, sensitive)
-
-class EqualiedOddsLoss()
