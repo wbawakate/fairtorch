@@ -43,5 +43,5 @@ pytest
 ## Authors
 
 - [Akihiko Fukuchi](https://github.com/akiFQC)
-- [yoko yabe](https://github.com/ykt345)
+- [Yoko Yabe](https://github.com/ykt345)
 - [Masashi Sode](https://github.com/MasashiSode)
