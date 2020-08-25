@@ -2,7 +2,7 @@
 name = "fairtorch"
 version = "0.1.0"
 description = ""
-authors = ["Masashi Sode <masashi.sode@gmail.com>", "Akihiko Fukuchi <yakarezakana@gmail.com>"]
+authors = ["Masashi Sode <masashi.sode@gmail.com>", "Akihiko Fukuchi <fukuchi@cl.rcast.u-tokyo.ac.jp>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
