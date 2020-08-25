@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fairtorch"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["Masashi Sode <masashi.sode@gmail.com>", "Akihiko Fukuchi <fukuchi@cl.rcast.u-tokyo.ac.jp>"]
 license = "MIT"
