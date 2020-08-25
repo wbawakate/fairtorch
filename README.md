@@ -45,7 +45,7 @@ data_loader = DataLoader(dataset, batch_size=256, shuffle=True)
 
 weight = 0.5
 criterion = nn.CrossEntropyLoss()
-constraints = weight * DemographicParityLoss()
+constraints = DemographicParityLoss()
 
 model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 2))
 optimizer = optim.Adam(model.parameters())
@@ -58,7 +58,7 @@ for epoch in range(max_epoch):
         logit = model(x.to(self.device))
         loss = criterion(logit, y)
         penalty = constraints(x, logit, sensitive_features, y)
-        loss = loss + penalty
+        loss = loss + weight * penalty
         loss.backward()
         optimizer.step()
 ```
