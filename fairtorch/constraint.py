@@ -18,6 +18,9 @@ class ConstraintLoss(nn.Module):
         return torch.zeros(self.n_constraints)
 
     def forward(self, X, out, sensitive, y=None):
+        sensitive = sensitive.view(out.shape)
+        if isinstance(y, torch.Tensor):
+            y = y.view(out.shape)
         out = torch.sigmoid(out)
         mu = self.mu_f(X=X, out=out, sensitive=sensitive, y=y)
         gap_constraint = F.relu(torch.mv(self.M, mu) - self.c)
