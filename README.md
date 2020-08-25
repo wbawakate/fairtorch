@@ -81,11 +81,11 @@ pip install .
 
 ## Background
 
-In recent years, machine learning-based algorithms and softwares have rapidly spread in society. However, cases have been reported where these algorithms unintentionally suggest discriminatory decisions[1]. For example, allocation harms can occur when AI systems extend or withhold opportunities, resources, or information. Some of the key applications are in hiring, school admissions, and lending[2]. Since Pytorch didn't have a library to achieve fairness yet, we decided to create one.
+In recent years, machine learning-based algorithms and softwares have rapidly spread in society. However, cases have been found where these algorithms unintentionally suggest discriminatory decisions[1]. For example, allocation harms can occur when AI systems extend or withhold opportunities, resources, or information. Some of the key applications are in hiring, school admissions, and lending[2]. Since Pytorch didn't have a library to achieve fairness yet, we decided to create one.
 
 ## What it does
 
-Fairtorch provides tools to mitigate inequities in classification and regression. Classification is only available in binary classification. A unique feature of this tool is that you can add a fairness constraint to your model by simply adding a few lines
+Fairtorch provides tools to mitigate inequities in classification and regression. Classification is only available in binary classification. A unique feature of this tool is that you can add a fairness constraint to your model by simply adding a few lines of code.
 
 ## Challenges we ran into
 
@@ -127,7 +127,7 @@ We confirmed by experiment that inequality is reduced just adding 2 lines of cod
 
 ## What We learned
 
-We learned the definitions of fairness and the mathematical formulations to achieve it.
+What we learn is how to create criteria of fairness, the mathematical formulations to achieve it.
 
 ## What's next for FairTorch
 
