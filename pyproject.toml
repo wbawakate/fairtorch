@@ -2,7 +2,7 @@
 name = "fairtorch"
 version = "0.1.0"
 description = ""
-authors = ["Masashi Sode <masashi.sode@gmail.com>"]
+authors = ["Masashi Sode <masashi.sode@gmail.com>", "Akihiko Fukuchi <yakarezakana@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
@@ -16,6 +16,7 @@ isort = "^4.3.21"
 autopep8 = "^1.5.2"
 mypy = "^0.782"
 pytest = "^6.0.1"
+poetry-setup = "^0.3.6"
 
 [build-system]
 requires = ["poetry-core>=1.0.0a5"]
