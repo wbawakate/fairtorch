@@ -79,6 +79,74 @@ cd fairtorch
 pip install .
 ```
 
+## Background
+
+In recent years, machine learning-based algorithms and softwares have rapidly spread in society. However, cases have been reported where these algorithms unintentionally suggest discriminatory decisions$^{1}$. For example, allocation harms can occur when AI systems extend or withhold opportunities, resources, or information. Some of the key applications are in hiring, school admissions, and lending$^2$. Since Pytorch didn't have a library to achieve fairness yet, we decided to create one.
+
+## What it does
+
+Fairtorch provides tools to mitigate inequities in classification and regression. Classification is only available in binary classification. A unique feature of this tool is that you can add a fairness constraint to your model by simply adding a few lines
+
+## Challenges we ran into
+
+In the beginning, we attempted to develop FairTorch based on the [Fairlearn](https://github.com/fairlearn/fairlearn)$^3$’s reduction algorithm. However, it was implemented based on scikit-learn and was not a suitable algorithm for deep learning. It requires ensemble training of the model, which would be too computationally expensive to be used for deep learning. To solve that problem, we implemented a constrained optimization without ensemble learning to fit the existing Fairlearn algorithm for deep learning.
+
+## How we built it
+
+We employ a method called group fairness, which is formulated by a constraint on the predictor's behavior called a parity constraint, where $X$ is the feature vector used for prediction, $A$ is a single sensitive feature (such as age or race), and $Y$ is the true label. A parity constraint is expressed in terms of an expected value about the distribution on $(X, A, Y)$.
+
+In order to achieve the above, constrained optimization is adopted. We implemented loss as a constraint. The loss corresponds to parity constraints.
+
+Demographic Parity and Equalized Odds are applied to the classification algorithm.
+
+We consider a binary classification setting where the training
+examples consist of triples $(X, A, Y)$, where X is a feature value, $A$ is a protected attribute, and $Y \in {0, 1}$ is a label.A classifier that predicts $Y$ from $X$ is $h: X→Y$.
+
+The demographic parity is shown below.
+
+$$
+E[h(X)| A=a] = E[h(X)] \ \rm{for \ all} \ a∈A ・・・(1)
+$$
+
+Next, the equalized odds are shown below.
+
+$$
+E[h(X)| A=a、Y=y] = E[h(X)|Y=y] \ \rm{for \ all} \  a∈A, \  y∈Y・・・(2)
+$$
+
+We consider learning a classifier $h(X; \theta)$ by pytorch that satisfies these fairness conditions.
+The \theta is a parameter. As an inequality-constrained optimization problem, we convert (1) and (2) to inequalities in order to train the classifier.
+
+$$
+M \mu (X, Y, A, h(X, \theta)) \leq c・・・(3)
+$$
+
+Thus, the study of the classifier $h(X; \theta)$ is as follows.
+$\rm{Min}_{\theta}$s error$(X, Y)$ subject to $M$ $\mu (X, Y, A, h(X, \theta)) \leq c$
+To apply this problem to pytorch's gradient method-based parameter optimization, we make the inequality constraint a constraint term R.
+
+$$
+R = B \cdot |ReLU(M \mu (X, Y, A, h(X, \theta)) - c)|^2・・・ (4)
+$$
+
+## Accomplishments that we're proud of
+
+We confirmed by experiment that inequality is reduced just adding 2 lines of code.
+
+## What We learned
+
+We learned the definitions of fairness and the mathematical formulations to achieve it.
+
+## What's next for FairTorch
+
+As the current optimization algorithm is not yet refined in FairTorch, we plan to implement a more efficient constrained optimization algorithm. Other definitions of fairness have also been proposed besides demographic parity and equalized odds. In the future, we intend to implement other kinds of fairness.
+
+## References
+
+1. the keynote by K. Crawford at NeurIPS 2017
+2. A Reductions Approach to Fair Classification (Alekh Agarwal et al.,2018)
+3. Fairlearn: A toolkit for assessing and improving fairness in AI (Bird et al., 2020)
+
 ## Development
 
 ```text
