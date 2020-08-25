@@ -92,6 +92,7 @@ class TestDemographicParityLoss:
         ],
     }
     device = "cpu"
+
     def test_dp(self, feature_dim, sample_size, dim_condition):
 
         model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 1))
@@ -137,9 +138,7 @@ class TestDemographicParityLoss:
             dataset, [int(0.8 * train_size), train_size - int(0.8 * train_size)]
         )
         print(self.device)
-        model = nn.Sequential(nn.Linear(feature_dim, 32),
-                         nn.ReLU(), 
-                         nn.Linear(32, 1))
+        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 1))
         model.to(self.device)
         optimizer = optim.Adam(model.parameters())
         train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
@@ -152,7 +151,6 @@ class TestDemographicParityLoss:
         )
 
     def __train_model(self, model, criterion, constraints, data_loader, optimizer, max_epoch=1):
-        #model.to(self.device)
         for epoch in range(max_epoch):
             for i, data in enumerate(data_loader):
                 x, y, sensitive_features = data
@@ -167,8 +165,6 @@ class TestDemographicParityLoss:
                 assert isinstance(logit, torch.Tensor)
                 assert isinstance(y, torch.Tensor)
                 print(x.device, y.device, sensitive_features.device, logit.device)
-                import sys
-                # sys.exit()
 
                 loss = criterion(logit, y)
                 if constraints:
