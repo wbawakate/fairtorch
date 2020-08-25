@@ -1,6 +1,5 @@
 import os
 import random
-from random import randint
 
 import numpy as np
 import torch
