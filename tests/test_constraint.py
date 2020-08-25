@@ -32,8 +32,8 @@ def pytest_generate_tests(metafunc):
 
 class SensitiveDataset(Dataset):
     def __init__(self, x, y, sensitive):
-        self.x = x
-        self.y = y
+        self.x = x.float()
+        self.y = y.float()
         # self.y = np.ones(shape=y.shape).astype(np.float32)
         sensitive_categories = sensitive.unique().numpy()
         # print(sencat)
@@ -52,7 +52,7 @@ class SensitiveDataset(Dataset):
         return len(self.x)
 
     def __getitem__(self, idx):
-        return self.x[idx], self.y[idx], self.sensitive_ids[idx]
+        return self.x[idx], self.y[idx].reshape(-1), self.sensitive_ids[idx]
 
 
 class TestConstraint:
@@ -69,33 +69,33 @@ class TestDemographicParityLoss:
         "test_eo": [dict(feature_dim=16, sample_size=128, dim_condition=2)],
         "test_train": [
             dict(
-                criterion=nn.CrossEntropyLoss(),
+                criterion=nn.BCEWithLogitsLoss(),
                 constraints=None,
                 feature_dim=16,
-                sample_size=128,
+                sample_size=16,
                 dim_condition=2,
             ),
             dict(
-                criterion=nn.CrossEntropyLoss(),
+                criterion=nn.BCEWithLogitsLoss(),
                 constraints=DemographicParityLoss(),
                 feature_dim=16,
-                sample_size=128,
+                sample_size=16,
                 dim_condition=2,
             ),
             dict(
-                criterion=nn.CrossEntropyLoss(),
+                criterion=nn.BCEWithLogitsLoss(),
                 constraints=EqualiedOddsLoss(),
                 feature_dim=16,
-                sample_size=128,
+                sample_size=16,
                 dim_condition=2,
             ),
         ],
     }
-    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    device = "cpu"
 
     def test_dp(self, feature_dim, sample_size, dim_condition):
 
-        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 2))
+        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 1))
         dp_loss = DemographicParityLoss(sensitive_classes=[0, 1])
         assert isinstance(dp_loss, DemographicParityLoss)
 
@@ -110,7 +110,7 @@ class TestDemographicParityLoss:
         assert float(loss) >= 0
 
     def test_eo(self, feature_dim, sample_size, dim_condition):
-        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 2))
+        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 1))
         eo_loss = EqualiedOddsLoss(sensitive_classes=[0, 1])
         assert isinstance(eo_loss, EqualiedOddsLoss)
         x_train = torch.randn((sample_size, feature_dim))
@@ -128,6 +128,7 @@ class TestDemographicParityLoss:
         assert float(loss) >= 0
 
     def test_train(self, criterion, constraints, feature_dim, sample_size, dim_condition):
+        torch.set_default_dtype(torch.float32)
         x = torch.randn((sample_size, feature_dim))
         y = torch.randint(0, 2, (sample_size,))
         sensitive_features = torch.randint(0, dim_condition, (sample_size,))
@@ -136,8 +137,9 @@ class TestDemographicParityLoss:
         train_dataset, test_dataset = torch.utils.data.random_split(
             dataset, [int(0.8 * train_size), train_size - int(0.8 * train_size)]
         )
-
-        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 2))
+        print(self.device)
+        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 1))
+        model.to(self.device)
         optimizer = optim.Adam(model.parameters())
         train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
         model = self.__train_model(
@@ -152,15 +154,23 @@ class TestDemographicParityLoss:
         for epoch in range(max_epoch):
             for i, data in enumerate(data_loader):
                 x, y, sensitive_features = data
+                x = x.to(self.device)
+                y = y.to(self.device)
+                sensitive_features = sensitive_features.to(self.device)
                 optimizer.zero_grad()
-                logit = model(x.to(self.device))
+                print(x.device, y.device, sensitive_features.device)
+                print(x.shape, y.shape, sensitive_features.shape)
+
+                logit = model(x)
                 assert isinstance(logit, torch.Tensor)
                 assert isinstance(y, torch.Tensor)
+                print(x.device, y.device, sensitive_features.device, logit.device)
+
                 loss = criterion(logit, y)
                 if constraints:
                     penalty = constraints(x, logit, sensitive_features, y)
+                    print(penalty.requires_grad)
                     loss = loss + penalty
                 loss.backward()
-                nn.utils.clip_grad_norm_(model.parameters(), max_norm=10, norm_type="inf")
                 optimizer.step()
         return model
