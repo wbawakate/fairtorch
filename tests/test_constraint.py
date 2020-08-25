@@ -165,8 +165,3 @@ class TestDemographicParityLoss:
                 nn.utils.clip_grad_norm_(model.parameters(), max_norm=10, norm_type="inf")
                 optimizer.step()
         return model
-
-
-if __name__ == "__main__":
-    test = TestDemographicParityLoss()
-    test.test_performance()
