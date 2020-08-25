@@ -4,6 +4,8 @@ PyTorch implementation of parity loss as constraints function to realize the fai
 
 Demographic parity loss and equalied odds loss are available.
 
+This project is a part of [PyTorch Summer Hackathon 2020](https://pytorch2020.devpost.com/). visit our [project page](https://devpost.com/software/a-qeysp1).
+
 ## Usage
 
 ```python
