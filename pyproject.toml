@@ -16,8 +16,10 @@ isort = "^4.3.21"
 autopep8 = "^1.5.2"
 mypy = "^0.782"
 pytest = "^6.0.1"
-poetry-setup = "^0.3.6"
 
+[tool.dephell.main]
+from = {format = "poetry", path = "pyproject.toml"}
+to = {format = "setuppy", path = "setup.py"}
 [build-system]
 requires = ["poetry-core>=1.0.0a5"]
 build-backend = "poetry.core.masonry.api"
