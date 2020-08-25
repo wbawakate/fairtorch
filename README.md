@@ -81,7 +81,7 @@ pip install .
 
 ## Background
 
-In recent years, machine learning-based algorithms and softwares have rapidly spread in society. However, cases have been reported where these algorithms unintentionally suggest discriminatory decisions$^{1}$. For example, allocation harms can occur when AI systems extend or withhold opportunities, resources, or information. Some of the key applications are in hiring, school admissions, and lending$^2$. Since Pytorch didn't have a library to achieve fairness yet, we decided to create one.
+In recent years, machine learning-based algorithms and softwares have rapidly spread in society. However, cases have been reported where these algorithms unintentionally suggest discriminatory decisions[1]. For example, allocation harms can occur when AI systems extend or withhold opportunities, resources, or information. Some of the key applications are in hiring, school admissions, and lending[2]. Since Pytorch didn't have a library to achieve fairness yet, we decided to create one.
 
 ## What it does
 
@@ -89,45 +89,37 @@ Fairtorch provides tools to mitigate inequities in classification and regression
 
 ## Challenges we ran into
 
-In the beginning, we attempted to develop FairTorch based on the [Fairlearn](https://github.com/fairlearn/fairlearn)$^3$’s reduction algorithm. However, it was implemented based on scikit-learn and was not a suitable algorithm for deep learning. It requires ensemble training of the model, which would be too computationally expensive to be used for deep learning. To solve that problem, we implemented a constrained optimization without ensemble learning to fit the existing Fairlearn algorithm for deep learning.
+In the beginning, we attempted to develop FairTorch based on the [Fairlearn](https://github.com/fairlearn/fairlearn)[3]’s reduction algorithm. However, it was implemented based on scikit-learn and was not a suitable algorithm for deep learning. It requires ensemble training of the model, which would be too computationally expensive to be used for deep learning. To solve that problem, we implemented a constrained optimization without ensemble learning to fit the existing Fairlearn algorithm for deep learning.
 
 ## How we built it
 
-We employ a method called group fairness, which is formulated by a constraint on the predictor's behavior called a parity constraint, where $X$ is the feature vector used for prediction, $A$ is a single sensitive feature (such as age or race), and $Y$ is the true label. A parity constraint is expressed in terms of an expected value about the distribution on $(X, A, Y)$.
+We employ a method called group fairness, which is formulated by a constraint on the predictor's behavior called a parity constraint, where <img src="https://latex.codecogs.com/png.latex?X" title="X" /> is the feature vector used for prediction, <img src="https://latex.codecogs.com/png.latex?A" title="A" /> is a single sensitive feature (such as age or race), and <img src="https://latex.codecogs.com/png.latex?Y" title="Y" /> is the true label. A parity constraint is expressed in terms of an expected value about the distribution on <img src="https://latex.codecogs.com/png.latex?(X,&space;A,&space;Y)" title="(X, A, Y)" />.
 
 In order to achieve the above, constrained optimization is adopted. We implemented loss as a constraint. The loss corresponds to parity constraints.
 
 Demographic Parity and Equalized Odds are applied to the classification algorithm.
 
 We consider a binary classification setting where the training
-examples consist of triples $(X, A, Y)$, where X is a feature value, $A$ is a protected attribute, and $Y \in {0, 1}$ is a label.A classifier that predicts $Y$ from $X$ is $h: X→Y$.
+examples consist of triples <img src="https://latex.codecogs.com/png.latex?(X,&space;A,&space;Y)" title="(X, A, Y)" />, where X is a feature value, $A$ is a protected attribute, and <img src="https://latex.codecogs.com/png.latex?Y&space;\in&space;{0,&space;1}" title="Y \in {0, 1}" /> is a label.A classifier that predicts <img src="https://latex.codecogs.com/png.latex?X" title="Y" /> from <img src="https://latex.codecogs.com/png.latex?X" title="X" /> is <img src="https://latex.codecogs.com/png.latex?h:&space;X&space;\rightarrow&space;Y" title="h: X \rightarrow Y" />.
 
 The demographic parity is shown below.
 
-$$
-E[h(X)| A=a] = E[h(X)] \ \rm{for \ all} \ a∈A ・・・(1)
-$$
+<img src="https://latex.codecogs.com/png.latex?E[h(X)|&space;A=a]&space;=&space;E[h(X)]&space;\&space;\rm{for&space;\&space;all}&space;\&space;a&space;\in&space;A" title="E[h(X)| A=a] = E[h(X)] \ \rm{for \ all} \ a \in A" />
 
 Next, the equalized odds are shown below.
 
-$$
-E[h(X)| A=a、Y=y] = E[h(X)|Y=y] \ \rm{for \ all} \  a∈A, \  y∈Y・・・(2)
-$$
+<img src="https://latex.codecogs.com/png.latex?E[h(X)|&space;A=a,&space;Y=y]&space;=&space;E[h(X)|Y=y]&space;\&space;\rm{for&space;\&space;all}&space;\&space;a\in&space;A,&space;\&space;y&space;\in&space;Y" title="E[h(X)| A=a, Y=y] = E[h(X)|Y=y] \ \rm{for \ all} \ a\in A, \ y \in Y" />
 
-We consider learning a classifier $h(X; \theta)$ by pytorch that satisfies these fairness conditions.
-The \theta is a parameter. As an inequality-constrained optimization problem, we convert (1) and (2) to inequalities in order to train the classifier.
+We consider learning a classifier <img src="https://latex.codecogs.com/png.latex?h(X;&space;\theta)" title="h(X; \theta)" /> by pytorch that satisfies these fairness conditions.
+The <img src="https://latex.codecogs.com/png.latex?\theta" title="\theta" /> is a parameter. As an inequality-constrained optimization problem, we convert (1) and (2) to inequalities in order to train the classifier.
 
-$$
-M \mu (X, Y, A, h(X, \theta)) \leq c・・・(3)
-$$
+<img src="https://latex.codecogs.com/png.latex?M&space;\mu&space;(X,&space;Y,&space;A,&space;h(X,&space;\theta))&space;\leq&space;c" title="M \mu (X, Y, A, h(X, \theta)) \leq c" />
 
-Thus, the study of the classifier $h(X; \theta)$ is as follows.
-$\rm{Min}_{\theta}$s error$(X, Y)$ subject to $M$ $\mu (X, Y, A, h(X, \theta)) \leq c$
+Thus, the study of the classifier <img src="https://latex.codecogs.com/png.latex?h(X;&space;\theta)" title="h(X; \theta)" /> is as follows.
+<img src="https://latex.codecogs.com/png.latex?\rm{Min}_{\theta}" title="\rm{Min}_{\theta}" />s error <img src="https://latex.codecogs.com/png.latex?(X,&space;Y)" title="(X, Y)" /> subject to <img src="https://latex.codecogs.com/png.latex?M" title="M" /> <img src="https://latex.codecogs.com/png.latex?\mu&space;(X,&space;Y,&space;A,&space;h(X,&space;\theta))&space;\leq&space;c" title="\mu (X, Y, A, h(X, \theta)) \leq c" />
 To apply this problem to pytorch's gradient method-based parameter optimization, we make the inequality constraint a constraint term R.
 
-$$
-R = B \cdot |ReLU(M \mu (X, Y, A, h(X, \theta)) - c)|^2・・・ (4)
-$$
+<img src="https://latex.codecogs.com/png.latex?R&space;=&space;B&space;\cdot&space;|ReLU(M&space;\mu&space;(X,&space;Y,&space;A,&space;h(X,&space;\theta))&space;-&space;c)|^2" title="R = B \cdot |ReLU(M \mu (X, Y, A, h(X, \theta)) - c)|^2" />
 
 ## Accomplishments that we're proud of
 
