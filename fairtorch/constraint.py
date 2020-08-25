@@ -63,7 +63,7 @@ class DemographicParityLoss(ConstraintLoss):
         expected_values_list.append(out.mean())
         return torch.stack(expected_values_list)
 
-    def forward(self, X, out, sensitive):
+    def forward(self, X, out, sensitive, y=None):
         return super(DemographicParityLoss, self).forward(X, out, sensitive)
 
 

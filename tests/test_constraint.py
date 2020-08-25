@@ -22,12 +22,21 @@ def seed_everything(seed):
 seed_everything(2020)
 
 
+def pytest_generate_tests(metafunc):
+    # called once per each test function
+    funcarglist = metafunc.cls.params[metafunc.function.__name__]
+    argnames = sorted(funcarglist[0])
+    metafunc.parametrize(
+        argnames, [[funcargs[name] for name in argnames] for funcargs in funcarglist]
+    )
+
+
 class SensitiveDataset(Dataset):
     def __init__(self, x, y, sensitive):
         self.x = x
         self.y = y
         # self.y = np.ones(shape=y.shape).astype(np.float32)
-        sensitive_categories = sensitive.unique()
+        sensitive_categories = sensitive.unique().numpy()
         # print(sencat)
         self.category_to_index_dict = dict(
             zip(list(sensitive_categories), range(len(sensitive_categories)))
@@ -36,30 +45,58 @@ class SensitiveDataset(Dataset):
             zip(range(len(sensitive_categories)), list(sensitive_categories))
         )
         self.sensitive = sensitive
-        self.sensitive_id = self.category_to_index_dict[self.sensitive]
+        self.sensitive_ids = [
+            self.category_to_index_dict[i] for i in self.sensitive.numpy().tolist()
+        ]
 
     def __len__(self):
         return len(self.x)
 
     def __getitem__(self, idx):
-        return self.x[idx], self.y[idx].reshape(-1), self.sensitive_id[idx]
+        return self.x[idx], self.y[idx], self.sensitive_ids[idx]
 
 
 class TestConstraint:
+    params = {"test_costraint": [dict()]}
+
     def test_costraint(self):
         consloss = ConstraintLoss()
         assert isinstance(consloss, ConstraintLoss)
 
 
 class TestDemographicParityLoss:
-    params = {"test_dp": [dict(feature_dim=16, sample_size=128, dim_condition=2)]}
+    params = {
+        "test_dp": [dict(feature_dim=16, sample_size=128, dim_condition=2)],
+        "test_eo": [dict(feature_dim=16, sample_size=128, dim_condition=2)],
+        "test_train": [
+            dict(
+                criterion=nn.CrossEntropyLoss(),
+                constraints=None,
+                feature_dim=16,
+                sample_size=128,
+                dim_condition=2,
+            ),
+            dict(
+                criterion=nn.CrossEntropyLoss(),
+                constraints=DemographicParityLoss(),
+                feature_dim=16,
+                sample_size=128,
+                dim_condition=2,
+            ),
+            dict(
+                criterion=nn.CrossEntropyLoss(),
+                constraints=EqualiedOddsLoss(),
+                feature_dim=16,
+                sample_size=128,
+                dim_condition=2,
+            ),
+        ],
+    }
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-    def test_dp(self, feature_dim=16, sample_size=128, dim_condition=2):
+    def test_dp(self, feature_dim, sample_size, dim_condition):
 
-        model = nn.Sequential(
-            nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 1), nn.Sigmoid()
-        )
+        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 2))
         dp_loss = DemographicParityLoss(sensitive_classes=[0, 1])
         assert isinstance(dp_loss, DemographicParityLoss)
 
@@ -73,49 +110,63 @@ class TestDemographicParityLoss:
         loss = dp_loss(x_train, out, sensitive_features)
         assert float(loss) >= 0
 
-    def test_performance(self, feature_dim=16, sample_size=1280, dim_condition=2):
+    def test_eo(self, feature_dim, sample_size, dim_condition):
+        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 2))
+        eo_loss = EqualiedOddsLoss(sensitive_classes=[0, 1])
+        assert isinstance(eo_loss, EqualiedOddsLoss)
+        x_train = torch.randn((sample_size, feature_dim))
+        y = torch.randint(0, 2, (sample_size,))
+
+        sensitive_features = torch.randint(0, dim_condition, (sample_size,))
+        out = model(x_train)
+
+        mu = eo_loss.mu_f(x_train, torch.sigmoid(out), sensitive_features, y=y)
+        print(mu.size(), type(mu.size()))
+        assert int(mu.size(0)) == (dim_condition + 1) * 2
+
+        loss = eo_loss(x_train, out, sensitive_features, y)
+
+        assert float(loss) >= 0
+
+    def test_train(self, criterion, constraints, feature_dim, sample_size, dim_condition):
         x = torch.randn((sample_size, feature_dim))
         y = torch.randint(0, 2, (sample_size,))
         sensitive_features = torch.randint(0, dim_condition, (sample_size,))
         dataset = SensitiveDataset(x, y, sensitive_features)
         train_size = len(dataset)
-        train_dataset, test_dataset = torch.utils.data.random_split(dataset, int(0.8 * train_size))
-
-        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 2))
-        loss = nn.BCEWithLogitsLoss()
-        optimizer = optim.Adam(model.parameters())
-        train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
-        test_loader = DataLoader(test_dataset, batch_size=256, shuffle=False)
-        model = self.__train_model(
-            model=model, loss=loss, optimizer=optimizer, data_loader=train_loader
+        train_dataset, test_dataset = torch.utils.data.random_split(
+            dataset, [int(0.8 * train_size), train_size - int(0.8 * train_size)]
         )
 
-    def test_eo(self):
-        fdim = 16
-        model = nn.Sequential(nn.Linear(fdim, 32), nn.ReLU(), nn.Linear(32, 1))
-        eo_loss = EqualiedOddsLoss(sensitive_classes=[0, 1])
-        self.assertTrue(isinstance(eo_loss, EqualiedOddsLoss))
-        bsize = 128
-        n_A = 2
-        X = torch.randn((bsize, fdim))
-        y = torch.randint(0, 2, (bsize,))
-        sensitive = torch.randint(0, n_A, (bsize,))
-        out = model(X)
+        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 2))
+        optimizer = optim.Adam(model.parameters())
+        train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+        model = self.__train_model(
+            model=model,
+            criterion=criterion,
+            constraints=constraints,
+            optimizer=optimizer,
+            data_loader=train_loader,
+        )
 
-        mu = eo_loss.mu_f(X, torch.sigmoid(out), sensitive, y=y)
-        print(mu.size(), type(mu.size()))
-        self.assertEqual(int(mu.size(0)), (n_A + 1) * 2)
-
-        loss = eo_loss(X, out, sensitive, y)
-
-        self.assertGreater(float(loss), 0)
-
-    def __train_model(self, model, loss, data_loader, optimizer, max_epoch=100):
+    def __train_model(self, model, criterion, constraints, data_loader, optimizer, max_epoch=1):
         for epoch in range(max_epoch):
             for i, data in enumerate(data_loader):
+                x, y, sensitive_features = data
                 optimizer.zero_grad()
-                logit = model(data["X"].to(self.device))
-                loss = loss(logit, data["y"].to(self.device))
+                logit = model(x.to(self.device))
+                assert isinstance(logit, torch.Tensor)
+                assert isinstance(y, torch.Tensor)
+                loss = criterion(logit, y)
+                if constraints:
+                    penalty = constraints(x, logit, sensitive_features, y)
+                    loss = loss + penalty
                 loss.backward()
                 nn.utils.clip_grad_norm_(model.parameters(), max_norm=10, norm_type="inf")
                 optimizer.step()
+        return model
+
+
+if __name__ == "__main__":
+    test = TestDemographicParityLoss()
+    test.test_performance()
