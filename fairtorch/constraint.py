@@ -60,10 +60,10 @@ class DemographicParityLoss(ConstraintLoss):
         for v in self.sensitive_classes:
             idx_true = sensitive == v  # torch.bool
             expected_values_list.append(out[idx_true].mean())
-        expected_values_list.append(out.mean())  # star
+        expected_values_list.append(out.mean())
         return torch.stack(expected_values_list)
 
-    def forward(self, X, out, sensitive):
+    def forward(self, X, out, sensitive, y=None):
         return super(DemographicParityLoss, self).forward(X, out, sensitive)
 
 
