@@ -91,8 +91,8 @@ As the current optimization algorithm is not yet refined in FairTorch, we plan t
 
 ## References
 
-1. the keynote by K. Crawford at NeurIPS 2017
-2. A Reductions Approach to Fair Classification (Alekh Agarwal et al.,2018)
+1. [the keynote by K. Crawford at NeurIPS 2017](https://youtu.be/fMym_BKWQzk)
+2. [A Reductions Approach to Fair Classification (Alekh Agarwal et al.,2018)](http://proceedings.mlr.press/v80/agarwal18a.html)
 3. Fairlearn: A toolkit for assessing and improving fairness in AI (Bird et al., 2020)
 
 ## Development
