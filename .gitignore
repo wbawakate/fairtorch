@@ -169,3 +169,4 @@ savedir/
 testdir/
 # event of tf board
 events.out.tfevents.*
+*.pkl
