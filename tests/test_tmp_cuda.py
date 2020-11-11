@@ -2,6 +2,10 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+from torch import nn, optim
+from torch.utils.data import DataLoader, Dataset
+import numpy as np
+
 
 class ConstraintLoss(nn.Module):
     def __init__(self, n_class=2, alpha=1, p_norm=2):
@@ -18,12 +22,12 @@ class ConstraintLoss(nn.Module):
         return torch.zeros(self.n_constraints)
 
     def forward(self, X, out, sensitive, y=None):
-        sensitive = sensitive.view(out.shape)
+        sensitive1 = sensitive.view(out.shape)
         if isinstance(y, torch.Tensor):
             y = y.reshape(out.shape)
-        out = torch.sigmoid(out)
-        mu = self.mu_f(X=X, out=out, sensitive=sensitive, y=y)
-        gap_constraint = F.relu(torch.mv(self.M, mu) - self.c)
+        out1 = torch.sigmoid(out)
+        mu1 = self.mu_f(X=X, out=out1, sensitive=sensitive1, y=y)
+        gap_constraint = F.relu(torch.mv(self.M, mu1) - self.c)
         if self.p_norm == 2:
             cons = self.alpha * torch.dot(gap_constraint, gap_constraint)
         else:
@@ -59,7 +63,7 @@ class DemographicParityLoss(ConstraintLoss):
         self.c = torch.zeros(self.n_constraints)
 
     def mu_f(self, X, out, sensitive, y=None):
-        expected_values_list = []
+        expected_values_list = [] # ここか？　listをやめてみよう
         for v in self.sensitive_classes:
             idx_true = sensitive == v  # torch.bool
             expected_values_list.append(out[idx_true].mean())
@@ -123,3 +127,99 @@ class EqualiedOddsLoss(ConstraintLoss):
 
     def forward(self, X, out, sensitive, y):
         return super(EqualiedOddsLoss, self).forward(X, out, sensitive, y=y)
+
+def genelate_data(n_samples = 1000, n_feature=5):
+    
+    y = np.random.randint(0, 2, size=n_samples)
+    loc0 = np.random.uniform(-2, 2, n_feature)
+    loc1 = np.random.uniform(-2, 2, n_feature)
+
+    X = np.zeros((n_samples, n_feature))
+    for i, u in enumerate(y):
+        if y[i] ==0:
+            X[i] = np.random.normal(loc = loc0, scale=1.0, size=n_feature)  
+        else:
+            X[i] = np.random.normal(loc = loc1, scale=1.0, size=n_feature)  
+
+    sensi_feat = (X[:, 0] > X[:, 0].mean()).astype(int)
+    X[:, 0] = sensi_feat.astype(np.float32)
+    X = torch.from_numpy(X).float()
+    y = torch.from_numpy(y).float()
+    sensi_feat = torch.from_numpy(sensi_feat)
+    return X, y, sensi_feat
+
+def main():
+    n_samples = 512
+    n_feature = 5
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    dataset = genelate_data(1024, n_feature=n_feature)
+    # data split
+    n_train = int(0.7*len(dataset[0]))
+    X_train, y_train, sensi_train = map(lambda x : x[:n_train], dataset)
+    X_test, y_test, sensi_test = map(lambda x : x[n_train:], dataset)
+
+    assert len(X_train) == len(X_train)
+    assert len(X_test) == len(X_test)
+
+    model = nn.Sequential(nn.Linear(n_feature,1))
+    model.to(device)
+
+    criterion = nn.BCEWithLogitsLoss()
+    optimizer = optim.SGD(model.parameters(),lr=0.1)
+    model.train()
+    for i in range(0, 200):
+        optimizer.zero_grad()    
+        X_train = X_train.to(device)
+        logit = model(X_train)
+        y_train = y_train.to(device)
+        loss = criterion(logit.view(-1), y_train)
+        loss.backward()
+        optimizer.step()
+    with torch.no_grad():
+        model.eval()
+        y_pred = (F.sigmoid(model(X_test.to(device))).reshape(-1) > 0.5 ).cpu().float()
+        acc_test = (y_pred  == y_test ).float().mean().item()
+
+    print("acc test: ",acc_test)
+
+    acc_test_vanilla = acc_test
+
+    gap_vanilla = np.abs(y_pred[sensi_test==0].mean().item() - y_pred[sensi_test==1].mean().item())
+    print("gap of expected values: ", gap_vanilla)
+
+    dim_hiden = 32
+    model = nn.Sequential(nn.Linear(n_feature,1))
+    model.to(device)
+    dp_loss = DemographicParityLoss(sensitive_classes=[0, 1], alpha=100, p_norm=2) # constraint 
+    dp_loss.to(device)
+    optimizer = optim.SGD(model.parameters(),lr=0.1)
+
+
+    model.train()
+    # train 
+    for i in range(0, 100):
+        optimizer.zero_grad()    
+        X_train = X_train.to(device)
+        logit = model(X_train)
+        y_train = y_train.to(device)
+        loss = criterion(logit.reshape(-1), y_train)
+        loss +=  dp_loss(X_train, logit, sensi_train) # add constraint
+        loss.backward()
+        optimizer.step()
+    y_pred = (torch.sigmoid(model(X_test)).view(-1) > 0.5 ).float()
+    acc_test = (y_pred  == y_test ).float().mean().float().item()
+
+    print("acc test: ",acc_test)
+
+    acc_test_vanilla = acc_test
+
+    gap_dp = np.abs(y_pred[sensi_test==0].mean().item() - y_pred[sensi_test==1].mean().item())
+    print("gap of expected values: ", gap_dp)
+
+
+
+if __name__ == '__main__':
+    main()
+        
