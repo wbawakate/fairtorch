@@ -13,13 +13,17 @@ class ConstraintLoss(nn.Module):
         self.alpha = alpha
         self.p_norm = p_norm
         self.n_class = n_class
-        self.n_constraints = 2
+        self.n_constraints = 2 * self.n_class
         self.dim_condition = self.n_class + 1
-        self.M = torch.zeros((self.n_constraints, self.dim_condition))
-        self.c = torch.zeros(self.n_constraints)
+        self.M = nn.Parameter(torch.zeros((self.n_constraints, self.dim_condition)) )# 4x3
+        self.c = nn.Parameter(torch.zeros(self.n_constraints))
+        self.M.requires_grad = False
+        self.c.requires_grad = False
 
-    def mu_f(self, X=None, y=None, sensitive=None):
-        return torch.zeros(self.n_constraints)
+
+    def mu_f(self, X=None, out=None, sensitive=None, y=None):
+        ze = torch.randn(self.dim_condition).to(X.device)
+        return ze * torch.max(X) *  torch.mean(out)
 
     def forward(self, X, out, sensitive, y=None):
         sensitive1 = sensitive.view(out.shape)
@@ -27,7 +31,8 @@ class ConstraintLoss(nn.Module):
             y = y.reshape(out.shape)
         out1 = torch.sigmoid(out)
         mu1 = self.mu_f(X=X, out=out1, sensitive=sensitive1, y=y)
-        gap_constraint = F.relu(torch.mv(self.M, mu1) - self.c)
+        print(mu1, mu1.device)
+        gap_constraint = F.relu(torch.matmul(self.M, mu1) - self.c)
         if self.p_norm == 2:
             cons = self.alpha * torch.dot(gap_constraint, gap_constraint)
         else:
@@ -51,24 +56,29 @@ class DemographicParityLoss(ConstraintLoss):
         )
         self.n_constraints = 2 * self.n_class
         self.dim_condition = self.n_class + 1
-        self.M = torch.zeros((self.n_constraints, self.dim_condition))
+        M = torch.zeros((self.n_constraints, self.dim_condition))
         for i in range(self.n_constraints):
             j = i % 2
             if j == 0:
-                self.M[i, j] = 1.0
+                M[i, j] = 1.0
                 self.M[i, -1] = -1.0
             else:
-                self.M[i, j - 1] = -1.0
-                self.M[i, -1] = 1.0
-        self.c = torch.zeros(self.n_constraints)
+                M[i, j - 1] = -1.0
+                M[i, -1] = 1.0
+        c = torch.zeros(self.n_constraints)
+        self.M = nn.Parameter( M)# 4x3
+        self.c = nn.Parameter(c)
+        self.M.requires_grad = False
+        self.c.requires_grad = False
+
 
     def mu_f(self, X, out, sensitive, y=None):
         expected_values_list = [] # ここか？　listをやめてみよう
         for v in self.sensitive_classes:
             idx_true = sensitive == v  # torch.bool
-            expected_values_list.append(out[idx_true].mean())
-        expected_values_list.append(out.mean())
-        return torch.stack(expected_values_list)
+            expected_values_list.append(torch.mean(out[idx_true]))
+        expected_values_list.append(torch.mean(out))
+        return torch.stack(expected_values_list, dim=0)
 
     def forward(self, X, out, sensitive, y=None):
         return super(DemographicParityLoss, self).forward(X, out, sensitive)
@@ -123,7 +133,7 @@ class EqualiedOddsLoss(ConstraintLoss):
         for v in self.y_classes:
             idx_true = y == v
             expected_values_list.append(out[idx_true].mean())
-        return torch.stack(expected_values_list)
+        return torch.cat(expected_values_list, dim=0)
 
     def forward(self, X, out, sensitive, y):
         return super(EqualiedOddsLoss, self).forward(X, out, sensitive, y=y)
@@ -152,8 +162,8 @@ def main():
     n_samples = 512
     n_feature = 5
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    # device = "cpu"
     dataset = genelate_data(1024, n_feature=n_feature)
     # data split
     n_train = int(0.7*len(dataset[0]))
@@ -169,7 +179,7 @@ def main():
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.SGD(model.parameters(),lr=0.1)
     model.train()
-    for i in range(0, 200):
+    for i in range(0, 20):
         optimizer.zero_grad()    
         X_train = X_train.to(device)
         logit = model(X_train)
@@ -188,28 +198,33 @@ def main():
 
     gap_vanilla = np.abs(y_pred[sensi_test==0].mean().item() - y_pred[sensi_test==1].mean().item())
     print("gap of expected values: ", gap_vanilla)
+    
 
     dim_hiden = 32
     model = nn.Sequential(nn.Linear(n_feature,1))
     model.to(device)
-    dp_loss = DemographicParityLoss(sensitive_classes=[0, 1], alpha=100, p_norm=2) # constraint 
-    dp_loss.to(device)
+    cons_loss = DemographicParityLoss(sensitive_classes=[0, 1], alpha=100, p_norm=2) # constraint 
+    # cons_loss = ConstraintLoss(n_class=2, alpha=100, p_norm=2) # constraint 
+    cons_loss.to(device)
     optimizer = optim.SGD(model.parameters(),lr=0.1)
 
-
+    print("cons_loss.M.device= ", cons_loss.M.device)
     model.train()
     # train 
-    for i in range(0, 100):
+    for i in range(0, 10):
         optimizer.zero_grad()    
         X_train = X_train.to(device)
         logit = model(X_train)
         y_train = y_train.to(device)
+        sensi_train = sensi_train.to(device)
         loss = criterion(logit.reshape(-1), y_train)
-        loss +=  dp_loss(X_train, logit, sensi_train) # add constraint
+        loss +=  cons_loss(X_train, logit, sensi_train) # add constraint
         loss.backward()
         optimizer.step()
-    y_pred = (torch.sigmoid(model(X_test)).view(-1) > 0.5 ).float()
-    acc_test = (y_pred  == y_test ).float().mean().float().item()
+    with torch.no_grad():
+        model.eval()
+        y_pred = (F.sigmoid(model(X_test.to(device))).reshape(-1) > 0.5 ).cpu().float()
+        acc_test = (y_pred  == y_test ).float().mean().item()
 
     print("acc test: ",acc_test)
 
