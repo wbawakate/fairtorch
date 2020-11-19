@@ -11,8 +11,12 @@ class ConstraintLoss(nn.Module):
         self.n_class = n_class
         self.n_constraints = 2
         self.dim_condition = self.n_class + 1
-        self.M = torch.zeros((self.n_constraints, self.dim_condition))
-        self.c = torch.zeros(self.n_constraints)
+        M = torch.zeros((self.n_constraints, self.dim_condition))
+        c = torch.zeros(self.n_constraints)
+        self.M = nn.Parameter(M)
+        self.c = nn.Parameter(c)
+        self.M.requires_grad = False
+        self.c.requires_grad = False
 
     def mu_f(self, X=None, y=None, sensitive=None):
         return torch.zeros(self.n_constraints)
@@ -23,6 +27,7 @@ class ConstraintLoss(nn.Module):
             y = y.reshape(out.shape)
         out = torch.sigmoid(out)
         mu = self.mu_f(X=X, out=out, sensitive=sensitive, y=y)
+
         gap_constraint = F.relu(torch.mv(self.M, mu) - self.c)
         if self.p_norm == 2:
             cons = self.alpha * torch.dot(gap_constraint, gap_constraint)
@@ -47,24 +52,28 @@ class DemographicParityLoss(ConstraintLoss):
         )
         self.n_constraints = 2 * self.n_class
         self.dim_condition = self.n_class + 1
-        self.M = torch.zeros((self.n_constraints, self.dim_condition))
+        M = torch.zeros((self.n_constraints, self.dim_condition))
         for i in range(self.n_constraints):
             j = i % 2
             if j == 0:
-                self.M[i, j] = 1.0
-                self.M[i, -1] = -1.0
+                M[i, j] = 1.0
+                M[i, -1] = -1.0
             else:
-                self.M[i, j - 1] = -1.0
-                self.M[i, -1] = 1.0
-        self.c = torch.zeros(self.n_constraints)
+                M[i, j - 1] = -1.0
+                M[i, -1] = 1.0
+        c = torch.zeros(self.n_constraints)
+        self.M = nn.Parameter(M)
+        self.c = nn.Parameter(c)
+        self.M.requires_grad = False
+        self.c.requires_grad = False
 
     def mu_f(self, X, out, sensitive, y=None):
-        expected_values_list = []
+        expected_values_list = [] 
         for v in self.sensitive_classes:
             idx_true = sensitive == v  # torch.bool
-            expected_values_list.append(out[idx_true].mean())
-        expected_values_list.append(out.mean())
-        return torch.stack(expected_values_list)
+            expected_values_list.append(torch.mean(out[idx_true]))
+        expected_values_list.append(torch.mean(out))
+        return torch.stack(expected_values_list, dim=0)
 
     def forward(self, X, out, sensitive, y=None):
         return super(DemographicParityLoss, self).forward(X, out, sensitive)
@@ -88,9 +97,9 @@ class EqualiedOddsLoss(ConstraintLoss):
         self.n_constraints = self.n_class * self.n_y_class * 2
         # J : dim of conditions  : ((|A|+1) x |Y|)
         self.dim_condition = self.n_y_class * (self.n_class + 1)
-        self.M = torch.zeros((self.n_constraints, self.dim_condition))
+        M = torch.zeros((self.n_constraints, self.dim_condition))
         # make M (K * J): (|A| x |Y| x {+, -})  *   (|A|+1) x |Y|) )
-        self.c = torch.zeros(self.n_constraints)
+        c = torch.zeros(self.n_constraints)
         element_K_A = self.sensitive_classes + [None]
         for i_a, a_0 in enumerate(self.sensitive_classes):
             for i_y, y_0 in enumerate(self.y_classes):
@@ -99,7 +108,11 @@ class EqualiedOddsLoss(ConstraintLoss):
                         for j_a, a_1 in enumerate(element_K_A):
                             i = i_a * (2 * self.n_y_class) + i_y * 2 + i_s
                             j = j_y + self.n_y_class * j_a
-                            self.M[i, j] = self.__element_M(a_0, a_1, y_1, y_1, s)
+                            M[i, j] = self.__element_M(a_0, a_1, y_1, y_1, s)
+        self.M = nn.Parameter(M)
+        self.c = nn.Parameter(c)
+        self.M.requires_grad = False
+        self.c.requires_grad = False
 
     def __element_M(self, a0, a1, y0, y1, s):
         if a0 is None or a1 is None:

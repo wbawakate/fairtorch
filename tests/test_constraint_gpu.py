@@ -91,33 +91,39 @@ class TestDemographicParityLoss:
             ),
         ],
     }
-    device = "cuda"
+    device = "cuda:0"
 
     def test_dp(self, feature_dim, sample_size, dim_condition):
 
         model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 1))
-        dp_loss = DemographicParityLoss(sensitive_classes=[0, 1])
+        model.to(self.device)
+        dp_loss = DemographicParityLoss(sensitive_classes=[0, 1])  
+        dp_loss.to(self.device)
+        # print(dp_loss)
         assert isinstance(dp_loss, DemographicParityLoss)
 
-        x_train = torch.randn((sample_size, feature_dim))
-        sensitive_features = torch.randint(0, dim_condition, (sample_size,))
+        x_train = torch.randn((sample_size, feature_dim)).to(self.device)
+        sensitive_features = torch.randint(0, dim_condition, (sample_size,)).to(self.device)
         out = model(x_train)
 
         mu = dp_loss.mu_f(x_train, out, sensitive_features)
         assert int(mu.size(0)) == dim_condition + 1
-
+        print("x_train, out, sensitive_features", x_train.device, out.device, sensitive_features.device)
         loss = dp_loss(x_train, out, sensitive_features)
         assert float(loss) >= 0
 
     def test_eo(self, feature_dim, sample_size, dim_condition):
         model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 1))
+        model.to(self.device)
         eo_loss = EqualiedOddsLoss(sensitive_classes=[0, 1])
+        eo_loss.to(self.device)
         assert isinstance(eo_loss, EqualiedOddsLoss)
-        x_train = torch.randn((sample_size, feature_dim))
-        y = torch.randint(0, 2, (sample_size,))
+        x_train = torch.randn((sample_size, feature_dim)).to(self.device)
+        y = torch.randint(0, 2, (sample_size,)).to(self.device)
 
-        sensitive_features = torch.randint(0, dim_condition, (sample_size,))
+        sensitive_features = torch.randint(0, dim_condition, (sample_size,)).to(self.device)
         out = model(x_train)
+        model.to(self.device)
 
         mu = eo_loss.mu_f(x_train, torch.sigmoid(out), sensitive_features, y=y)
         print(mu.size(), type(mu.size()))
@@ -153,6 +159,7 @@ class TestDemographicParityLoss:
         )
 
     def __train_model(self, model, criterion, constraints, data_loader, optimizer, max_epoch=1):
+        
         for epoch in range(max_epoch):
             for i, data in enumerate(data_loader):
                 x, y, sensitive_features = data

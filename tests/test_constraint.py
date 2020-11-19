@@ -96,7 +96,8 @@ class TestDemographicParityLoss:
     def test_dp(self, feature_dim, sample_size, dim_condition):
 
         model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 1))
-        dp_loss = DemographicParityLoss(sensitive_classes=[0, 1])
+        dp_loss = DemographicParityLoss(sensitive_classes=[0, 1])  
+        dp_loss.to(self.device)
         assert isinstance(dp_loss, DemographicParityLoss)
 
         x_train = torch.randn((sample_size, feature_dim))
@@ -112,6 +113,7 @@ class TestDemographicParityLoss:
     def test_eo(self, feature_dim, sample_size, dim_condition):
         model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 1))
         eo_loss = EqualiedOddsLoss(sensitive_classes=[0, 1])
+        eo_loss.to(self.device)
         assert isinstance(eo_loss, EqualiedOddsLoss)
         x_train = torch.randn((sample_size, feature_dim))
         y = torch.randint(0, 2, (sample_size,))
