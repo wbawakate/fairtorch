@@ -141,11 +141,10 @@ class Trainer:
         early_stopping=True,
         early_stopping_patience=10,
     ):
-        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.device = "cpu"
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(self.device)
-        self.criterion = criterion
-        self.fairness_constraint = fairness_constraint
+        self.criterion = criterion.to(self.device)
+        self.fairness_constraint = fairness_constraint.to(self.device)
         self.optimizer = optimizer
         self.train_dataloader = train_dataloader
         self.valid_dataloader = valid_dataloader
@@ -168,7 +167,7 @@ class Trainer:
             loss = self.criterion(logit.view(-1), y.to(self.device))
             if self.fairness_constraint:
                 penalty = self.fairness_constraint(
-                    x, logit.clone().view(-1), sensitive_feature.to(self.device), y.to(self.device)
+                    x, logit.view(-1), sensitive_feature.to(self.device), y.to(self.device)
                 )
             else:
                 penalty = 0
@@ -216,10 +215,7 @@ class Trainer:
 
                 if self.fairness_constraint:
                     penalty = self.fairness_constraint(
-                        x,
-                        logit.clone().view(-1),
-                        sensitive_feature.to(self.device),
-                        y.to(self.device),
+                        x, logit.view(-1), sensitive_feature.to(self.device), y.to(self.device),
                     )
                 else:
                     penalty = 0
@@ -312,6 +308,7 @@ def get_dataloader(
 if __name__ == "__main__":
     label = "pass_bar"
     sensitive_feature_elements = "race1"
+    # sensitive_feature_elements = "gender"
 
     data_generator = DatasetGenerator()
     df = data_generator.generate_dataset()
