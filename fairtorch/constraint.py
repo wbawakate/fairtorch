@@ -6,6 +6,7 @@ from torch.nn import functional as F
 class ConstraintLoss(nn.Module):
     def __init__(self, n_class=2, alpha=1, p_norm=2):
         super(ConstraintLoss, self).__init__()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.alpha = alpha
         self.p_norm = p_norm
         self.n_class = n_class
@@ -23,7 +24,9 @@ class ConstraintLoss(nn.Module):
             y = y.view(out.shape)
         out = torch.sigmoid(out)
         mu = self.mu_f(X=X, out=out, sensitive=sensitive, y=y)
-        gap_constraint = F.relu(torch.mv(self.M, mu) - self.c)
+        gap_constraint = F.relu(
+            torch.mv(self.M.to(self.device), mu.to(self.device)) - self.c.to(self.device)
+        )
         if self.p_norm == 2:
             cons = self.alpha * torch.dot(gap_constraint, gap_constraint)
         else:
