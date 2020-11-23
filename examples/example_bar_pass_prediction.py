@@ -1,18 +1,17 @@
-from pathlib import Path
 import os
 import random
-import pandas as pd
+from pathlib import Path
+
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-import sklearn
+import pandas as pd
 import torch
+from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.model_selection import StratifiedKFold
+from sklearn.preprocessing import LabelEncoder
 from torch import nn, optim
 from torch.utils.data import DataLoader, Dataset
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split, StratifiedKFold
-from fairtorch import ConstraintLoss, DemographicParityLoss, EqualiedOddsLoss
-from sklearn.metrics import accuracy_score, roc_auc_score
+
+from fairtorch import DemographicParityLoss
 
 
 def seed_everything(seed):
@@ -79,7 +78,7 @@ class DatasetGenerator:
         return df
 
 
-class BarPassDataset(torch.utils.data.Dataset):
+class BarPassDataset(Dataset):
     def __init__(self, x, y, sensitive_feature, transform=None):
         self.transform = transform
         self.x = x
@@ -295,13 +294,13 @@ def get_dataloader(
     y_train = torch.from_numpy(y_train.values).float()
     sensitive_feature_train = torch.from_numpy(sensitive_feature_train.values).float()
     train_dataset = BarPassDataset(x=x_train, y=y_train, sensitive_feature=sensitive_feature_train)
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=128, shuffle=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=128, shuffle=True)
 
     x_valid = torch.from_numpy(x_valid.values).float()
     y_valid = torch.from_numpy(y_valid.values).float()
     sensitive_feature_valid = torch.from_numpy(sensitive_feature_valid.values).float()
     valid_dataset = BarPassDataset(x=x_valid, y=y_valid, sensitive_feature=sensitive_feature_valid)
-    valid_dataloader = torch.utils.data.DataLoader(valid_dataset, batch_size=128, shuffle=False)
+    valid_dataloader = DataLoader(valid_dataset, batch_size=128, shuffle=False)
     return train_dataloader, valid_dataloader
 
 
