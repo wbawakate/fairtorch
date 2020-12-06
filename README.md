@@ -1,5 +1,7 @@
 # FairTorch
 
+![FairTorchLogo](./fig/fairtorch_logo_vertical.png)
+
 PyTorch implementation of parity loss as constraints function to realize the fairness of machine learning.
 
 Demographic parity loss and equalied odds loss are available.
