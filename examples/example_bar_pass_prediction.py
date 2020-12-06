@@ -333,14 +333,8 @@ if __name__ == "__main__":
             nn.BatchNorm1d(64),
             nn.Linear(64, 1),
         )
-        # model = nn.Sequential(
-        #     nn.Linear(feature_num, 128), nn.ReLU(), nn.BatchNorm1d(128), nn.Linear(128, 1),
-        # )
 
-        criterion = nn.BCEWithLogitsLoss(
-            # pos_weight=torch.tensor((df.pass_bar == 0).sum() / (df.pass_bar == 1).sum())
-            pos_weight=None
-        )
+        criterion = nn.BCEWithLogitsLoss(pos_weight=None)
         fairness_constraint = DemographicParityLoss(
             alpha=100,
             sensitive_classes=df[sensitive_feature_elements].unique().astype(int).tolist(),
@@ -354,7 +348,7 @@ if __name__ == "__main__":
             optimizer=optimizer,
             train_dataloader=train_dataloader,
             valid_dataloader=valid_dataloader,
-            use_fairness_penalty=True,
+            use_fairness_penalty=False,
         )
         metrics_best, train_result_best, valid_result_best = trainer.fit()
         metric_list.append(metrics_best)
