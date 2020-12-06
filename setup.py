@@ -14,7 +14,7 @@ readme = ""
 setup(
     long_description=readme,
     name="fairtorch",
-    version="0.1.1",
+    version="0.1.2",
     python_requires="==3.*,>=3.6.5",
     author="Masashi Sode",
     author_email="masashi.sode@gmail.com",
