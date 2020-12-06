@@ -256,21 +256,21 @@ class Trainer:
         for epoch in range(self.max_epoch):
             train_result = self.training_step(epoch)
             valid_result = self.validation_step(epoch)
-            if self.early_stopping:
-                if self.metrics_direction == "max":
-                    if metrics_best < valid_result[self.metrics]:
-                        metrics_best = valid_result[self.metrics]
-                        train_result_best = train_result
-                        valid_result_best = valid_result
-                    else:
-                        no_improvement += 1
+            if self.metrics_direction == "max":
+                if metrics_best < valid_result[self.metrics]:
+                    metrics_best = valid_result[self.metrics]
+                    train_result_best = train_result
+                    valid_result_best = valid_result
                 else:
-                    if metrics_best > valid_result[self.metrics]:
-                        metrics_best = valid_result[self.metrics]
-                        train_result_best = train_result
-                        valid_result_best = valid_result
-                    else:
-                        no_improvement += 1
+                    no_improvement += 1
+            else:
+                if metrics_best > valid_result[self.metrics]:
+                    metrics_best = valid_result[self.metrics]
+                    train_result_best = train_result
+                    valid_result_best = valid_result
+                else:
+                    no_improvement += 1
+            if self.early_stopping:
                 if no_improvement > self.early_stopping_patience:
                     break
 
