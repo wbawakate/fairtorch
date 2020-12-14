@@ -90,6 +90,29 @@ class TestDemographicParityLoss:
                 dim_condition=2,
             ),
         ],
+        "test_train_non_linear":[
+            dict(
+                criterion=nn.BCEWithLogitsLoss(),
+                constraints=None,
+                feature_dim=16,
+                sample_size=16,
+                dim_condition=2,
+            ),
+            dict(
+                criterion=nn.BCEWithLogitsLoss(),
+                constraints=DemographicParityLoss(),
+                feature_dim=16,
+                sample_size=16,
+                dim_condition=2,
+            ),
+            dict(
+                criterion=nn.BCEWithLogitsLoss(),
+                constraints=EqualiedOddsLoss(),
+                feature_dim=16,
+                sample_size=16,
+                dim_condition=2,
+            ),
+        ],
     }
     device = "cpu"
 
@@ -149,6 +172,43 @@ class TestDemographicParityLoss:
             optimizer=optimizer,
             data_loader=train_loader,
         )
+
+
+    def _generate_nolinear_data(self, sample_size, feature_dim, dim_condition):
+        x = torch.randn((sample_size, feature_dim-1))
+        sensitive_features = torch.randint(0, dim_condition, (sample_size,))
+        print("x.shape, sensitive_features.shape",  x.shape, sensitive_features.shape)
+        x = torch.cat([x, sensitive_features.reshape(sample_size, 1).float()], dim=1)
+        gen_f = nn.Sequential(
+                        nn.Linear(feature_dim, 16), nn.Tanh(),
+                         nn.Linear(16, 8), nn.LeakyReLU(), 
+                         nn.Linear(8, 1), nn.BatchNorm1d(1), nn.Sigmoid()
+                        )
+        y_pred = gen_f.forward(x)
+        y = y_pred > 0.5
+        return x, y, sensitive_features
+
+
+    def test_train_non_linear(self, criterion, constraints, feature_dim, sample_size, dim_condition):
+        torch.set_default_dtype(torch.float32)
+        x, y, sensitive_features = self._generate_nolinear_data(sample_size, feature_dim, dim_condition)
+        dataset = SensitiveDataset(x, y, sensitive_features)
+        train_size = len(dataset)
+        train_dataset, test_dataset = torch.utils.data.random_split(
+            dataset, [int(0.8 * train_size), train_size - int(0.8 * train_size)]
+        )
+        print(self.device)
+        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 32), nn.ReLU(), nn.Linear(32, 1))
+        model.to(self.device)
+        optimizer = optim.Adam(model.parameters())
+        train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+        model = self.__train_model(
+            data_loader=train_loader,
+            model=model,
+            criterion=criterion,
+            constraints=constraints,
+            optimizer=optimizer)
+
 
     def __train_model(self, model, criterion, constraints, data_loader, optimizer, max_epoch=1):
         for epoch in range(max_epoch):
