@@ -100,11 +100,26 @@ class TestDemographicParityLoss:
             ),
             dict(
                 criterion=nn.BCEWithLogitsLoss(),
-                constraints=DemographicParityLoss(),
+                constraints=DemographicParityLoss(penalty="penalty"),
                 feature_dim=16,
                 sample_size=16,
                 dim_condition=2,
             ),
+            dict(
+                criterion=nn.BCEWithLogitsLoss(),
+                constraints=DemographicParityLoss(penalty="exact_penalty"),
+                feature_dim=16,
+                sample_size=16,
+                dim_condition=2,
+            ),
+            dict(
+                criterion=nn.BCEWithLogitsLoss(),
+                constraints=DemographicParityLoss(penalty="barrier"),
+                feature_dim=16,
+                sample_size=16,
+                dim_condition=2,
+            ),
+
             dict(
                 criterion=nn.BCEWithLogitsLoss(),
                 constraints=EqualiedOddsLoss(),
