@@ -68,7 +68,7 @@ class TestConstraint:
         assert isinstance(consloss, ConstraintLoss)
 
 
-class TestDemographicParityLoss:
+class TestParityLoss:
     params = {
         "test_dp": [dict(feature_dim=16, sample_size=128, dim_condition=2)],
         "test_eo": [dict(feature_dim=16, sample_size=128, dim_condition=2)],
@@ -95,7 +95,7 @@ class TestDemographicParityLoss:
                 dim_condition=2,
             ),
         ],
-        "test_train_non_linear":[
+        "test_train_nonlinear":[
             dict(
                 criterion=nn.BCEWithLogitsLoss(),
                 constraints=None,
@@ -173,6 +173,8 @@ class TestDemographicParityLoss:
         ],
     }
     device = "cpu"
+    vanilla_result = None
+    dataset_tuple = None
 
     def test_dp(self, feature_dim, sample_size, dim_condition):
 
@@ -249,7 +251,7 @@ class TestDemographicParityLoss:
         return x, y, sensitive_features
 
 
-    def test_train_non_linear(self, criterion, constraints, feature_dim, sample_size, dim_condition):
+    def test_train_nonlinear(self, criterion, constraints, feature_dim, sample_size, dim_condition):
         torch.set_default_dtype(torch.float32)
         x, y, sensitive_features = self._generate_nolinear_data(sample_size, feature_dim, dim_condition)
         dataset = SensitiveDataset(x, y, sensitive_features)
@@ -271,10 +273,11 @@ class TestDemographicParityLoss:
 
     def test_train_eval_nonlinear(self, criterion, constraints, feature_dim, sample_size, dim_condition):
         torch.set_default_dtype(torch.float32)
-        x, y, sensitive_features = self._generate_nolinear_data(sample_size, feature_dim, dim_condition)
-        # plot_pca_x(x, y)
-        # plt.hist(y.numpy())
-        # plt.show()
+        if self.dataset_tuple:
+            x, y, sensitive_features =self.dataset_tuple
+        else:
+            x, y, sensitive_features = self._generate_nolinear_data(sample_size, feature_dim, dim_condition)
+            self.dataset_tuple = (x, y, sensitive_features)
         dataset = SensitiveDataset(x, y, sensitive_features)
         train_size = len(dataset)
         train_dataset, test_dataset = torch.utils.data.random_split(
@@ -297,9 +300,16 @@ class TestDemographicParityLoss:
         print("constraint: ", constraints)
         if constraints: 
             print("alpha: ", constraints.alpha)
+            self.vanilla_result = result
         print(f'feature_dim: {feature_dim}, sample_size: {sample_size}')
         pprint.pprint(result)
-
+        if self.vanilla_result and constraints:
+            if isinstance(constraints, DemographicParityLoss):
+                assert self.vanilla_result["DP"]["diff"] >= result["DP"]["diff"]
+            if isinstance(constraints, EqualiedOddsLoss):
+                assert self.vanilla_result["EO"]["diff"] >= result["EO"]["diff"]
+        else:
+            assert result["AUC"] > 0.6
 
     def __train_model(self, model, criterion, constraints, data_loader, optimizer, max_epoch=1):
         for epoch in range(max_epoch):
