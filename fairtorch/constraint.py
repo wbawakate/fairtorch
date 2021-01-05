@@ -33,17 +33,17 @@ class L1ExactPenaltyConstraintLoss(nn.Module):
         gap_constraint = F.relu(x) # c -> a
         return torch.norm(gap_constraint, p=1)
 
-class BarrierConstraintLoss(nn.Module):
+class _BarrierConstraintLoss(nn.Module):
     def __init__(self):
         super(BarrierConstraintLoss,self).__init__()
     
     def forward(self, x):
         # x is size (c)
         # dim_constraint ->  1
-        return -1 * torch.sum(torch.log(-1*x))
+        return -1 * torch.sum(torch.log( -1*x))
 
 class ConstraintLoss(nn.Module):
-    def __init__(self, n_class=2, alpha=1, penalty="penalty"):
+    def __init__(self, n_class=2, alpha=1, penalty="exact_penalty"):
         super(ConstraintLoss, self).__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.alpha = alpha
@@ -56,8 +56,6 @@ class ConstraintLoss(nn.Module):
             self.penalty_const = L2PenaltyConstraintLoss()
         elif penalty=="exact_penalty":
             self.penalty_const = L1ExactPenaltyConstraintLoss()
-        elif penalty=="barrier":
-            self.penalty_const = BarrierConstraintLoss()
         else:
             self.penalty_const = L2PenaltyConstraintLoss()
 

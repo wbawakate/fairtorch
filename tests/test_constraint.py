@@ -7,7 +7,12 @@ from torch import nn, optim
 from torch.utils.data import DataLoader, Dataset
 
 from fairtorch import ConstraintLoss, DemographicParityLoss, EqualiedOddsLoss
-
+import fairlearn
+from sklearn import metrics as skm
+from fairlearn import metrics as flm
+from matplotlib import pyplot as plt 
+from sklearn.decomposition import PCA
+import pprint
 
 def seed_everything(seed):
     random.seed(seed)
@@ -128,6 +133,44 @@ class TestDemographicParityLoss:
                 dim_condition=2,
             ),
         ],
+        "test_train_eval_nonlinear" :[
+            dict(
+                criterion=nn.BCEWithLogitsLoss(),
+                constraints=None,
+                feature_dim=16,
+                sample_size=2**10,
+                dim_condition=2,
+            ),
+            dict(
+                criterion=nn.BCEWithLogitsLoss(),
+                constraints=DemographicParityLoss(penalty="penalty"),
+                feature_dim=16,
+                sample_size=2**10,
+                dim_condition=2,
+            ),
+            dict(
+                criterion=nn.BCEWithLogitsLoss(),
+                constraints=DemographicParityLoss(penalty="exact_penalty"),
+                feature_dim=16,
+                sample_size=2**10,
+                dim_condition=2,
+            ),
+            dict(
+                criterion=nn.BCEWithLogitsLoss(),
+                constraints=EqualiedOddsLoss(penalty="penalty", alpha=1),
+                feature_dim=16,
+                sample_size=2**10,
+                dim_condition=2,
+            ),
+            dict(
+                criterion=nn.BCEWithLogitsLoss(),
+                constraints=EqualiedOddsLoss(penalty="exact_penalty", alpha=1),
+                feature_dim=16,
+                sample_size=2**10,
+                dim_condition=2,
+            ),
+
+        ],
     }
     device = "cpu"
 
@@ -196,11 +239,13 @@ class TestDemographicParityLoss:
         x = torch.cat([x, sensitive_features.reshape(sample_size, 1).float()], dim=1)
         gen_f = nn.Sequential(
                         nn.Linear(feature_dim, 16), nn.Tanh(),
-                         nn.Linear(16, 8), nn.LeakyReLU(), 
-                         nn.Linear(8, 1), nn.BatchNorm1d(1), nn.Sigmoid()
+                        nn.Linear(16, 8), nn.LeakyReLU(), 
+                        nn.Linear(8, 1), nn.BatchNorm1d(1),
+                        nn.Tanh()
                         )
         y_pred = gen_f.forward(x)
-        y = y_pred > 0.5
+        y = y_pred > 0.0
+        y = y.float()
         return x, y, sensitive_features
 
 
@@ -224,6 +269,37 @@ class TestDemographicParityLoss:
             constraints=constraints,
             optimizer=optimizer)
 
+    def test_train_eval_nonlinear(self, criterion, constraints, feature_dim, sample_size, dim_condition):
+        torch.set_default_dtype(torch.float32)
+        x, y, sensitive_features = self._generate_nolinear_data(sample_size, feature_dim, dim_condition)
+        # plot_pca_x(x, y)
+        # plt.hist(y.numpy())
+        # plt.show()
+        dataset = SensitiveDataset(x, y, sensitive_features)
+        train_size = len(dataset)
+        train_dataset, test_dataset = torch.utils.data.random_split(
+            dataset, [int(0.8 * train_size), train_size - int(0.8 * train_size)]
+        )
+        print(self.device)
+        model = nn.Sequential(nn.Linear(feature_dim, 32), nn.ReLU(), nn.Linear(32, 32), nn.ReLU(), nn.Linear(32, 1))
+        model.to(self.device)
+        optimizer = optim.Adam(model.parameters())
+        train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+        test_loader = DataLoader(test_dataset, batch_size=256, shuffle=False)
+        model = self.__train_model(
+            data_loader=train_loader,
+            model=model,
+            criterion=criterion,
+            constraints=constraints,
+            optimizer=optimizer,
+            max_epoch=10)
+        result = self.__evaluate_model(model, criterion, test_loader)
+        print("constraint: ", constraints)
+        if constraints: 
+            print("alpha: ", constraints.alpha)
+        print(f'feature_dim: {feature_dim}, sample_size: {sample_size}')
+        pprint.pprint(result)
+
 
     def __train_model(self, model, criterion, constraints, data_loader, optimizer, max_epoch=1):
         for epoch in range(max_epoch):
@@ -233,19 +309,75 @@ class TestDemographicParityLoss:
                 y = y.to(self.device)
                 sensitive_features = sensitive_features.to(self.device)
                 optimizer.zero_grad()
-                print(x.device, y.device, sensitive_features.device)
-                print(x.shape, y.shape, sensitive_features.shape)
+                # print(x.device, y.device, sensitive_features.device)
+                # print(x.shape, y.shape, sensitive_features.shape)
 
                 logit = model(x)
                 assert isinstance(logit, torch.Tensor)
                 assert isinstance(y, torch.Tensor)
-                print(x.device, y.device, sensitive_features.device, logit.device)
+                # print(x.device, y.device, sensitive_features.device, logit.device)
 
                 loss = criterion(logit, y)
                 if constraints:
                     penalty = constraints(x, logit, sensitive_features, y)
-                    print(penalty.requires_grad)
+                    # print(penalty.requires_grad)
                     loss = loss + penalty
                 loss.backward()
                 optimizer.step()
         return model
+
+    def __evaluate_model(self, model, criterion, data_loader):
+        model.eval()
+        y_true = []
+        y_pred = []
+        y_out = []
+        sensitives = []
+        for i, data in enumerate(data_loader):
+            x, y, sensitive_features = data
+            x = x.to(self.device)
+            y = y.to(self.device)
+            sensitive_features = sensitive_features.to(self.device)
+            with torch.no_grad():
+                logit = model(x)
+            # logit : binary prediction size=(b, 1)
+            bina = (torch.sigmoid(logit) > 0.5 ).float()
+            y_true += y.cpu().tolist()
+            y_pred += bina.cpu().tolist()
+            y_out += torch.sigmoid(logit).tolist()
+            sensitives += sensitive_features.cpu().tolist()
+        result = {}
+        result["acc"] = skm.accuracy_score(y_true, y_pred)
+        result["f1score"] = skm.f1_score( y_true, y_pred)
+        result["AUC"] = skm.roc_auc_score(y_true, y_out)
+        result['DP'] = {
+            "diff":flm.demographic_parity_difference(
+                y_true,
+                y_pred, 
+                sensitive_features= sensitive_features),
+            "ratio": flm.demographic_parity_ratio(
+                y_true,
+                y_pred, 
+                sensitive_features= sensitive_features),
+        }
+        result["EO"] = {
+            "diff":flm.equalized_odds_difference(
+                y_true,
+                y_pred, 
+                sensitive_features= sensitive_features),
+            "ratio": flm.equalized_odds_ratio(
+                y_true,
+                y_pred, 
+                sensitive_features= sensitive_features),
+        }
+        return result
+
+
+def plot_pca_x(x, y ,a =None):
+    pca = PCA(n_components=2)
+    x_2d = pca.fit_transform(x)
+    assert x_2d.shape[0] == x.shape[0]
+    assert x_2d.shape[1] == 2
+    plt.scatter(x_2d[:, 0], x_2d[: , 1], c=y)
+    plt.legend()
+    plt.show()
+
