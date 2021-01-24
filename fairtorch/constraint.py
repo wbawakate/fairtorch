@@ -2,18 +2,62 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+class L2PenaltyConstraintLoss(nn.Module):
+    def __init__(self):
+        super(L2PenaltyConstraintLoss,self).__init__()
+    
+    def forward(self, x):
+        # x is size (c)
+        # dim_constraint ->  1
+        gap_constraint = F.relu(x) # c -> a
+        return torch.norm(gap_constraint, p=2)
+
+class L1ExactPenaltyConstraintLoss(nn.Module):
+    def __init__(self):
+        super(L1ExactPenaltyConstraintLoss,self).__init__()
+    
+    def forward(self, x):
+        # x is size (c)
+        # dim_constraint ->  1
+        gap_constraint = F.relu(x) # c -> a
+        return torch.norm(gap_constraint, p=1)
+
+
+class L1ExactPenaltyConstraintLoss(nn.Module):
+    def __init__(self):
+        super(L1ExactPenaltyConstraintLoss,self).__init__()
+    
+    def forward(self, x):
+        # x is size (c)
+        # dim_constraint ->  1
+        gap_constraint = F.relu(x) # c -> a
+        return torch.norm(gap_constraint, p=1)
+
+class _BarrierConstraintLoss(nn.Module):
+    def __init__(self):
+        super(BarrierConstraintLoss,self).__init__()
+    
+    def forward(self, x):
+        # x is size (c)
+        # dim_constraint ->  1
+        return -1 * torch.sum(torch.log( -1*x))
 
 class ConstraintLoss(nn.Module):
-    def __init__(self, n_class=2, alpha=1, p_norm=2):
+    def __init__(self, n_class=2, alpha=1, penalty="exact_penalty"):
         super(ConstraintLoss, self).__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.alpha = alpha
-        self.p_norm = p_norm
         self.n_class = n_class
         self.n_constraints = 2
         self.dim_condition = self.n_class + 1
         self.M = torch.zeros((self.n_constraints, self.dim_condition))
         self.c = torch.zeros(self.n_constraints)
+        if penalty =="penalty":
+            self.penalty_const = L2PenaltyConstraintLoss()
+        elif penalty=="exact_penalty":
+            self.penalty_const = L1ExactPenaltyConstraintLoss()
+        else:
+            self.penalty_const = L2PenaltyConstraintLoss()
 
     def mu_f(self, X=None, y=None, sensitive=None):
         return torch.zeros(self.n_constraints)
@@ -24,18 +68,12 @@ class ConstraintLoss(nn.Module):
             y = y.view(out.shape)
         out = torch.sigmoid(out)
         mu = self.mu_f(X=X, out=out, sensitive=sensitive, y=y)
-        gap_constraint = F.relu(
-            torch.mv(self.M.to(self.device), mu.to(self.device)) - self.c.to(self.device)
-        )
-        if self.p_norm == 2:
-            cons = self.alpha * torch.dot(gap_constraint, gap_constraint)
-        else:
-            cons = self.alpha * torch.dot(gap_constraint.detach(), gap_constraint)
-        return cons
+        gap  =torch.mv(self.M.to(self.device), mu.to(self.device)) - self.c.to(self.device)
+        return self.penalty_const.forward(gap)
 
 
 class DemographicParityLoss(ConstraintLoss):
-    def __init__(self, sensitive_classes=[0, 1], alpha=1, p_norm=2):
+    def __init__(self, sensitive_classes=[0, 1], alpha=1, penalty="penalty"):
         """loss of demograpfhic parity
 
         Args:
@@ -46,7 +84,7 @@ class DemographicParityLoss(ConstraintLoss):
         self.sensitive_classes = sensitive_classes
         self.n_class = len(sensitive_classes)
         super(DemographicParityLoss, self).__init__(
-            n_class=self.n_class, alpha=alpha, p_norm=p_norm
+            n_class=self.n_class, alpha=alpha, penalty=penalty
         )
         self.n_constraints = 2 * self.n_class
         self.dim_condition = self.n_class + 1
@@ -74,7 +112,7 @@ class DemographicParityLoss(ConstraintLoss):
 
 
 class EqualiedOddsLoss(ConstraintLoss):
-    def __init__(self, sensitive_classes=[0, 1], alpha=1, p_norm=2):
+    def __init__(self, sensitive_classes=[0, 1], alpha=1,penalty="penalty"):
         """loss of demograpfhic parity
 
         Args:
@@ -86,7 +124,7 @@ class EqualiedOddsLoss(ConstraintLoss):
         self.y_classes = [0, 1]
         self.n_class = len(sensitive_classes)
         self.n_y_class = len(self.y_classes)
-        super(EqualiedOddsLoss, self).__init__(n_class=self.n_class, alpha=alpha, p_norm=p_norm)
+        super(EqualiedOddsLoss, self).__init__(n_class=self.n_class, alpha=alpha, penalty=penalty)
         # K:  number of constraint : (|A| x |Y| x {+, -})
         self.n_constraints = self.n_class * self.n_y_class * 2
         # J : dim of conditions  : ((|A|+1) x |Y|)
