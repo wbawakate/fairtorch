@@ -23,6 +23,7 @@ matplotlib = "^3.3.3"
 scikit-learn = "^0.23.2"
 xlrd = "^1.2.0"
 pylint = "^2.6.0"
+fairlearn = "^0.5.0"
 
 [tool.dephell.main]
 from = {format = "poetry", path = "pyproject.toml"}

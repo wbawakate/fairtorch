@@ -101,6 +101,23 @@ python-versions = "*"
 six = "*"
 
 [[package]]
+name = "fairlearn"
+version = "0.5.0"
+description = "Algorithms for mitigating unfairness in supervised machine learning"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+numpy = ">=1.17.2"
+pandas = ">=0.25.1"
+scikit-learn = ">=0.22.1"
+scipy = ">=1.4.1"
+
+[package.extras]
+customplots = ["matplotlib (>=3.2.1)"]
+
+[[package]]
 name = "flake8"
 version = "3.8.3"
 description = "the modular source code checker: pep8 pyflakes and co"
@@ -528,7 +545,7 @@ testing = ["jaraco.itertools", "func-timeout"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.5"
-content-hash = "323003987301d900342c90f1f5d377480d76e1ccbe9f7aee004e0059eb0040ee"
+content-hash = "48e2a89fc5b975e86e74497fcd75b6178d38023f8edfe9ca52a0586852b6c123"
 
 [metadata.files]
 appdirs = [
@@ -565,6 +582,10 @@ colorama = [
 cycler = [
     {file = "cycler-0.10.0-py2.py3-none-any.whl", hash = "sha256:1d8a5ae1ff6c5cf9b93e8811e581232ad8920aeec647c37316ceac982b08cb2d"},
     {file = "cycler-0.10.0.tar.gz", hash = "sha256:cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8"},
+]
+fairlearn = [
+    {file = "fairlearn-0.5.0-py3-none-any.whl", hash = "sha256:474c59e0d1a5aadabb94462b123a1c97dd6b331cef8e2d2f12003d5c0b53b492"},
+    {file = "fairlearn-0.5.0.tar.gz", hash = "sha256:a5f4bf003ed7868ca7d6ebb8a0f2b01d2ebbf642dd882c88d07efa134362a8dc"},
 ]
 flake8 = [
     {file = "flake8-3.8.3-py2.py3-none-any.whl", hash = "sha256:15e351d19611c887e482fb960eae4d44845013cc142d42896e9862f775d8cf5c"},
