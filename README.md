@@ -32,7 +32,7 @@ pip install fairtorch
 ### newest version
 
 ```text
-git clone https://github.com/MasashiSode/fairtorch
+git clone https://github.com/akiFQC/fairtorch
 cd fairtorch
 pip install .
 ```
