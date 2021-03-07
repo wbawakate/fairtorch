@@ -1,6 +1,6 @@
 # FairTorch
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ![FairTorchLogo](./fig/fairtorch_logo_vertical.png)
@@ -130,6 +130,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <table>
   <tr>
     <td align="center"><a href="https://www.masashisode.com"><img src="https://avatars.githubusercontent.com/u/39261814?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Masashi Sode</b></sub></a><br /><a href="#infra-MasashiSode" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=MasashiSode" title="Tests">⚠️</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=MasashiSode" title="Code">💻</a> <a href="#maintenance-MasashiSode" title="Maintenance">🚧</a> <a href="#tutorial-MasashiSode" title="Tutorials">✅</a> <a href="https://github.com/wbawakate/fairtorch/pulls?q=is%3Apr+reviewed-by%3AMasashiSode" title="Reviewed Pull Requests">👀</a></td>
+    <td align="center"><a href="https://github.com/akiFQC"><img src="https://avatars.githubusercontent.com/u/32811500?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Aki_FQC</b></sub></a><br /><a href="https://github.com/wbawakate/fairtorch/commits?author=akiFQC" title="Code">💻</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=akiFQC" title="Tests">⚠️</a> <a href="#maintenance-akiFQC" title="Maintenance">🚧</a></td>
   </tr>
 </table>
 
