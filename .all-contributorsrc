@@ -1,0 +1,29 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "MasashiSode",
+      "name": "Masashi Sode",
+      "avatar_url": "https://avatars.githubusercontent.com/u/39261814?v=4",
+      "profile": "https://www.masashisode.com",
+      "contributions": [
+        "infra",
+        "test",
+        "code",
+        "maintenance",
+        "tutorial",
+        "review"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "fairtorch",
+  "projectOwner": "wbawakate",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
