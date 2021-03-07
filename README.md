@@ -129,7 +129,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="https://www.masashisode.com"><img src="https://avatars.githubusercontent.com/u/39261814?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Masashi Sode</b></sub></a><br /><a href="#infra-MasashiSode" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=MasashiSode" title="Tests">⚠️</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=MasashiSode" title="Code">💻</a></td>
+    <td align="center"><a href="https://www.masashisode.com"><img src="https://avatars.githubusercontent.com/u/39261814?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Masashi Sode</b></sub></a><br /><a href="#infra-MasashiSode" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=MasashiSode" title="Tests">⚠️</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=MasashiSode" title="Code">💻</a> <a href="#maintenance-MasashiSode" title="Maintenance">🚧</a> <a href="#tutorial-MasashiSode" title="Tutorials">✅</a> <a href="https://github.com/wbawakate/fairtorch/pulls?q=is%3Apr+reviewed-by%3AMasashiSode" title="Reviewed Pull Requests">👀</a></td>
   </tr>
 </table>
 
