@@ -18,6 +18,17 @@
         "tutorial",
         "review"
       ]
+    },
+    {
+      "login": "akiFQC",
+      "name": "Aki_FQC",
+      "avatar_url": "https://avatars.githubusercontent.com/u/32811500?v=4",
+      "profile": "https://github.com/akiFQC",
+      "contributions": [
+        "code",
+        "test",
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
