@@ -1,4 +1,7 @@
 # FairTorch
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ![FairTorchLogo](./fig/fairtorch_logo_vertical.png)
 
@@ -116,3 +119,23 @@ pytest
 - [Akihiko Fukuchi](https://github.com/akiFQC)
 - [Yoko Yabe](https://github.com/ykt345)
 - [Masashi Sode](https://github.com/MasashiSode)
+
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/akiFQC"><img src="https://avatars.githubusercontent.com/u/32811500?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Aki_FQC</b></sub></a><br /><a href="#infra-akiFQC" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=akiFQC" title="Tests">⚠️</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=akiFQC" title="Code">💻</a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
