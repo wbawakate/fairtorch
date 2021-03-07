@@ -29,6 +29,16 @@
         "test",
         "maintenance"
       ]
+    },
+    {
+      "login": "ykt345",
+      "name": "yoko yabe",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3901603?v=4",
+      "profile": "https://github.com/ykt345",
+      "contributions": [
+        "projectManagement",
+        "ideas"
+      ]
     }
   ],
   "contributorsPerLine": 7,
