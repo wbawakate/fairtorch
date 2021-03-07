@@ -129,7 +129,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="https://github.com/akiFQC"><img src="https://avatars.githubusercontent.com/u/32811500?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Aki_FQC</b></sub></a><br /><a href="#infra-akiFQC" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=akiFQC" title="Tests">⚠️</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=akiFQC" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/akiFQC"><img src="https://avatars.githubusercontent.com/u/32811500?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Aki_FQC</b></sub></a><br /><a href="#infra-akiFQC" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=akiFQC" title="Tests">⚠️</a> <a href="https://github.com/wbawakate/fairtorch/commits?author=akiFQC" title="Code">💻</a> <a href="#maintenance-akiFQC" title="Maintenance">🚧</a></td>
   </tr>
 </table>
 
