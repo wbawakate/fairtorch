@@ -13,7 +13,10 @@
       "contributions": [
         "infra",
         "test",
-        "code"
+        "code",
+        "maintenance",
+        "tutorial",
+        "review"
       ]
     }
   ],
