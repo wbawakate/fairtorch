@@ -5,6 +5,8 @@
 
 ![FairTorchLogo](./fig/fairtorch_logo_vertical.png)
 
+FairTorch won 1st prize at the [Global PyTorch Summer Hackathon 2020, Responsible AI section](https://pytorch2020.devpost.com/project-gallery).
+
 PyTorch implementation of parity loss as constraints function to realize the fairness of machine learning.
 
 Demographic parity loss and equalied odds loss are available.
