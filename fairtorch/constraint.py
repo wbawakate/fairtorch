@@ -43,9 +43,12 @@ class _BarrierConstraintLoss(nn.Module):
         return -1 * torch.sum(torch.log( -1*x))
 
 class ConstraintLoss(nn.Module):
-    def __init__(self, n_class=2, alpha=1, penalty="exact_penalty"):
+    def __init__(self, n_class=2, alpha=1, penalty="exact_penalty", device="cpu"):
         super(ConstraintLoss, self).__init__()
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if isinstance(device, torch.device):
+            self.device = device
+        else :
+            self.device = torch.device(device)
         self.alpha = alpha
         self.n_class = n_class
         self.n_constraints = 2

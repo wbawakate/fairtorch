@@ -389,31 +389,13 @@ class TestParityLoss:
             ),
             dict(
                 criterion=nn.BCEWithLogitsLoss(),
-                constraints=AdversarialDebiasingLoss(parity="DP"),
+                constraints=AdversarialDebiasingLoss(parity="DP", n_layers=1, alpha=10, n_iter=1),
                 feature_dim=16,
                 dim_condition=2,
             ),
             dict(
                 criterion=nn.BCEWithLogitsLoss(),
-                constraints=AdversarialDebiasingLoss(parity="EO"),
-                feature_dim=16,
-                dim_condition=2,
-            ),
-            dict(
-                criterion=nn.BCEWithLogitsLoss(),
-                constraints=AdversarialDebiasingLoss(parity="DP", n_layers=1, alpha=10),
-                feature_dim=16,
-                dim_condition=2,
-            ),
-            dict(
-                criterion=nn.BCEWithLogitsLoss(),
-                constraints=AdversarialDebiasingLoss(parity="DP", n_layers=1, alpha=100),
-                feature_dim=16,
-                dim_condition=2,
-            ),
-            dict(
-                criterion=nn.BCEWithLogitsLoss(),
-                constraints=AdversarialDebiasingLoss(parity="EO", n_layers=1, alpha=10),
+                constraints=AdversarialDebiasingLoss(parity="DP", n_layers=2, alpha=10, n_iter=1),
                 feature_dim=16,
                 dim_condition=2,
             ),

@@ -72,8 +72,16 @@ class AdversarialDebiasingLoss(nn.Module):
             number of iteration for training adversary net
         alpha : float, default 1.0
             coefficient of adverarial loss
+        device : str or torch.device, defult "cpu"
+            device of loss
         """
         super(AdversarialDebiasingLoss, self).__init__()
+        if not 'device' in kargs:
+            kargs['device'] = 'cpu'
+        if isinstance(kargs['device'], torch.device):
+            self.device = kargs['device']
+        else :
+            self.device = torch.device(kargs['device'])
         self.n_layers = kargs["n_layers"] if "n_layers" in kargs else 1
         self.dim_hidden = kargs["dim_hidden"] if "dim_hidden" in kargs else 16
         self.sensitive_classes = kargs["sensitive_classes"] if "sensitive_classes" in kargs else [0, 1]
@@ -100,12 +108,6 @@ class AdversarialDebiasingLoss(nn.Module):
             dim_hidden=self.dim_hidden,
             dim_output=self.n_classes,
         )
-        if "device" in kargs:
-            self.device = kargs["device"] 
-        elif torch.cuda.is_available():
-            self.device = "cuda"
-        else :
-            self.device = "cpu"
         self.alpha = kargs['alpha'] if 'alpha' in kargs else 1.0
         self.adversary_net.to(self.device)
         self.criterion = nn.CrossEntropyLoss()
