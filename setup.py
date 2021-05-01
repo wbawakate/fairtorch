@@ -6,7 +6,7 @@
 
 try:
     from setuptools import setup
-except:
+except ImportError:
     from distutils.core import setup
 
 readme = ""
@@ -14,7 +14,7 @@ readme = ""
 setup(
     long_description=readme,
     name="fairtorch",
-    version="0.1.1",
+    version="0.1.2",
     python_requires="==3.*,>=3.6.5",
     author="Masashi Sode",
     author_email="masashi.sode@gmail.com",
@@ -31,8 +31,14 @@ setup(
             "black==19.*,>=19.10.0.b0",
             "flake8==3.*,>=3.8.2",
             "isort==4.*,>=4.3.21",
+            "matplotlib==3.*,>=3.3.3",
             "mypy==0.*,>=0.782.0",
+            "numpy==1.*,>=1.19.4",
+            "pandas==1.*,>=1.1.4",
             "pytest==6.*,>=6.0.1",
+            "scikit-learn==0.*,>=0.23.2",
+            "seaborn==0.*,>=0.11.0",
+            "xlrd==1.*,>=1.2.0",
         ]
     },
 )

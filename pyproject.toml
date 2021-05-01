@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fairtorch"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 authors = ["Masashi Sode <masashi.sode@gmail.com>", "Akihiko Fukuchi <fukuchi@cl.rcast.u-tokyo.ac.jp>"]
 license = "MIT"
@@ -29,5 +29,5 @@ fairlearn = "^0.5.0"
 from = {format = "poetry", path = "pyproject.toml"}
 to = {format = "setuppy", path = "setup.py"}
 [build-system]
-requires = ["poetry-core>=1.0.0a5"]
+requires = ["poetry-core>=1.0.0a5", "setuptools"]
 build-backend = "poetry.core.masonry.api"
