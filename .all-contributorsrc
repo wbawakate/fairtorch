@@ -1,0 +1,50 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "MasashiSode",
+      "name": "Masashi Sode",
+      "avatar_url": "https://avatars.githubusercontent.com/u/39261814?v=4",
+      "profile": "https://www.masashisode.com",
+      "contributions": [
+        "infra",
+        "test",
+        "code",
+        "maintenance",
+        "tutorial",
+        "review"
+      ]
+    },
+    {
+      "login": "akiFQC",
+      "name": "Aki_FQC",
+      "avatar_url": "https://avatars.githubusercontent.com/u/32811500?v=4",
+      "profile": "https://github.com/akiFQC",
+      "contributions": [
+        "code",
+        "test",
+        "maintenance"
+      ]
+    },
+    {
+      "login": "ykt345",
+      "name": "yoko yabe",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3901603?v=4",
+      "profile": "https://github.com/ykt345",
+      "contributions": [
+        "projectManagement",
+        "ideas"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "fairtorch",
+  "projectOwner": "wbawakate",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
